@@ -1,0 +1,21 @@
+{
+	"schemaVersion": 1,
+	"id": "infiniteoneblock",
+	"version": "${version}",
+	"name": "Infinite OneBlock",
+	"description": "A progressive One Block survival game mode for Minecraft.",
+	"authors": ["Rohit Kumar"],
+	"license": "CC0-1.0",
+	"icon": "assets/infiniteoneblock/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["com.infiniteoneblock.InfiniteOneBlock"],
+		"client": ["com.infiniteoneblock.client.InfiniteOneBlockClient"]
+	},
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
