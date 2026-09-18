@@ -24,7 +24,7 @@ public class OneBlockRewardManager {
     private final Random random =
             new Random();
 
-    public void trySpawnSupplyChest(
+    public boolean trySpawnSupplyChest(
             ServerPlayer player,
             ServerLevel world,
             BlockPos oneBlockPosition
@@ -33,9 +33,9 @@ public class OneBlockRewardManager {
         if (random.nextDouble()
                 >= SUPPLY_CHEST_CHANCE) {
 
-            return;
+            return false;
         }
-
+// BACKUP of getting a place to spawn chest
 //        BlockPos chestPosition =
 //                findChestPosition(
 //                        world,
@@ -50,7 +50,7 @@ public class OneBlockRewardManager {
                             + "No free position found for supply chest."
             );
 
-            return;
+            return false;
         }
 
         /*
@@ -75,7 +75,7 @@ public class OneBlockRewardManager {
                             + "Failed to create supply chest."
             );
 
-            return;
+            return false;
         }
 
         /*
@@ -128,6 +128,8 @@ public class OneBlockRewardManager {
                 "[InfiniteOneBlock] Supply chest spawned at "
                         + chestPosition
         );
+
+        return true;
     }
 
     /**

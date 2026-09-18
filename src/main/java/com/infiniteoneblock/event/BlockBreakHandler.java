@@ -132,11 +132,19 @@ public class BlockBreakHandler {
          * This is evaluated after the successful
          * OneBlock break.
          */
-        rewardManager.trySpawnSupplyChest(
+        boolean spawnedChest = rewardManager.trySpawnSupplyChest(
                 player,
                 island.getWorld(),
                 island.getOneBlockPosition()
         );
+
+        /*
+         * If a chest was spawned, we STOP and DO NOT regenerate a block.
+         * The chest itself now sits at the oneBlockPosition waiting to be opened/mined.
+         */
+        if (spawnedChest) {
+            return;
+        }
 
         /*
          * Regenerate the OneBlock after Minecraft

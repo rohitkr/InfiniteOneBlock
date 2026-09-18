@@ -47,6 +47,24 @@ public class InfiniteOneBlock implements ModInitializer {
 				}
 		);
 
+//		ServerLifecycleEvents.SERVER_STARTED.register(
+//				server -> {
+//
+//					System.out.println(
+//							"[InfiniteOneBlock] Server started."
+//					);
+//
+//					oneBlockManager.initialize();
+//
+//					// ✅ ADD THIS HERE (inside lambda)
+//					server.getAllLevels().forEach(level -> {
+//						System.out.println(
+//								"[InfiniteOneBlock] Found level: " + level
+//						);
+//					});
+//				}
+//		);
+
 		PlayerJoinHandler playerJoinHandler =
 				new PlayerJoinHandler(
 						islandManager
