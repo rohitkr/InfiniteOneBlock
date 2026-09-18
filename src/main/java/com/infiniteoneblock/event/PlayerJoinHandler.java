@@ -1,22 +1,26 @@
 package com.infiniteoneblock.event;
 
+import com.infiniteoneblock.InfiniteOneBlock;
 import com.infiniteoneblock.island.Island;
 import com.infiniteoneblock.island.IslandManager;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.portal.TeleportTransition;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.Set;
 
 public class PlayerJoinHandler {
 
     private final IslandManager islandManager;
 
-    public PlayerJoinHandler(
-            IslandManager islandManager
-    ) {
+    public PlayerJoinHandler(IslandManager islandManager) {
         this.islandManager = islandManager;
     }
 
@@ -27,104 +31,97 @@ public class PlayerJoinHandler {
                         + player.getGameProfile().name()
         );
 
-        /*
-         * If the player already has an island,
-         * do not create another one.
-         */
-        if (islandManager.hasIsland(
-                player.getUUID()
-        )) {
+        // Modern 26.2 Server Level Extraction
+        ServerLevel currentLevel = (ServerLevel) player.level();
+        MinecraftServer server = currentLevel.getServer();
 
-            System.out.println(
-                    "[InfiniteOneBlock] Player already has an island."
-            );
+        if (server == null) return;
 
+        // Retrieves the custom dimension via the 26.2 ResourceKey layout
+        ServerLevel voidWorld = server.getLevel(InfiniteOneBlock.ONEBLOCK_WORLD_KEY);
+        if (voidWorld == null) {
+            System.out.println("[InfiniteOneBlock] ERROR: OneBlock void dimension not found! Verify your dimension JSON files.");
             return;
         }
 
         /*
-         * Make sure we are on a server world.
+         * If the player already has an island, make sure they route back to it safely.
          */
-        if (!(player.level() instanceof ServerLevel world)) {
+        if (islandManager.hasIsland(player.getUUID())) {
+            System.out.println("[InfiniteOneBlock] Player already has an island.");
 
-            System.out.println(
-                    "[InfiniteOneBlock] Player is not in a server world."
-            );
+            if (!player.level().dimension().equals(InfiniteOneBlock.ONEBLOCK_WORLD_KEY)) {
+                Island existingIsland = islandManager.getIsland(player.getUUID());
+                if (existingIsland != null) {
+                    BlockPos existingSpawn = existingIsland.getSpawnPosition();
 
+                    TeleportTransition transition = new TeleportTransition(
+                            voidWorld,
+                            new Vec3(existingSpawn.getX() + 0.5, existingSpawn.getY(), existingSpawn.getZ() + 0.5),
+                            Vec3.ZERO,
+                            player.getYRot(),
+                            player.getXRot(),
+                            Set.of(),
+                            TeleportTransition.DO_NOTHING
+                    );
+                    player.teleport(transition);
+                }
+            }
             return;
         }
 
         /*
          * ========================================
-         * CREATE ISLAND
+         * CREATE ISLAND ON VOID WORLD
          * ========================================
          *
-         * The island consists of ONE BLOCK.
+         * Safely invokes your custom IslandManager calculations inside the target void dimension map.
          */
-        Island island =
-                islandManager.createIsland(
-                        player.getUUID(),
-                        world
-                );
+        Island island = islandManager.createIsland(
+                player.getUUID(),
+                voidWorld
+        );
 
         /*
          * ========================================
          * CREATE THE ONE BLOCK
          * ========================================
          */
-        world.setBlockAndUpdate(
+        voidWorld.setBlockAndUpdate(
                 island.getOneBlockPosition(),
                 Blocks.GRASS_BLOCK.defaultBlockState()
         );
 
         /*
          * ========================================
-         * TELEPORT PLAYER
+         * TELEPORT PLAYER VIA MODERN TRANSITION
          * ========================================
-         *
-         * Spawn the player directly above the
-         * One Block.
          */
-        BlockPos spawn =
-                island.getSpawnPosition();
+        BlockPos spawn = island.getSpawnPosition();
+        Vec3 spawnVec = new Vec3(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5);
 
-        player.teleportTo(
-                spawn.getX() + 0.5,
-                spawn.getY(),
-                spawn.getZ() + 0.5
+        TeleportTransition islandTransition = new TeleportTransition(
+                voidWorld,
+                spawnVec,
+                Vec3.ZERO,
+                player.getYRot(),
+                player.getXRot(),
+                Set.of(),
+                TeleportTransition.DO_NOTHING
         );
+
+        player.teleport(islandTransition);
 
         /*
          * ========================================
-         * SURVIVAL MODE
+         * SURVIVAL MODE & MESSAGES
          * ========================================
          */
-        player.setGameMode(
-                GameType.SURVIVAL
-        );
+        player.setGameMode(GameType.SURVIVAL);
 
-        /*
-         * ========================================
-         * WELCOME MESSAGE
-         * ========================================
-         */
-        player.sendSystemMessage(
-                Component.literal(
-                        "Welcome to Infinite OneBlock!"
-                )
-        );
+        player.sendSystemMessage(Component.literal("Welcome to Infinite OneBlock!"));
+        player.sendSystemMessage(Component.literal("Mine the block beneath you to begin."));
 
-        player.sendSystemMessage(
-                Component.literal(
-                        "Mine the block beneath you to begin."
-                )
-        );
-
-        /*
-         * ========================================
-         * LOG
-         * ========================================
-         */
         System.out.println(
                 "[InfiniteOneBlock] One Block created for "
                         + player.getGameProfile().name()

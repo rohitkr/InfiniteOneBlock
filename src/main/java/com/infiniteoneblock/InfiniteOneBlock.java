@@ -12,6 +12,12 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.Identifier; // Use Identifier instead of ResourceLocation
+import net.minecraft.world.level.Level;
+
+
 public class InfiniteOneBlock implements ModInitializer {
 
 	public static final String MOD_ID =
@@ -19,6 +25,12 @@ public class InfiniteOneBlock implements ModInitializer {
 
 	private static IslandManager islandManager;
 	private static OneBlockManager oneBlockManager;
+
+	// ─── UPDATED FOR 26.2 ───
+	public static final ResourceKey<Level> ONEBLOCK_WORLD_KEY = ResourceKey.create(
+			Registries.DIMENSION,
+			Identifier.fromNamespaceAndPath(MOD_ID, "oneblock_world")
+	);
 
 	@Override
 	public void onInitialize() {
