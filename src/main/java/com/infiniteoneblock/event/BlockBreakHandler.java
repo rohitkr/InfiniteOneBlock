@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.entity.EquipmentSlot; // Added for tool damage tracking
 
 import java.util.List;
 
@@ -55,7 +56,7 @@ public class BlockBreakHandler {
                     }
 
                     handleOneBlockBreak(serverPlayer, island, state, pos);
-                    return false;
+                    return false; // Cancels vanilla code, requiring manual damage math below
                 }
         );
     }
@@ -82,6 +83,16 @@ public class BlockBreakHandler {
             }
         }
 
+        /*
+         * FIX BUG: TOOL DURABILITY LOSS
+         * Since we cancel vanilla execution, manually inflict 1 point of block-break durability damage
+         * onto the item held in the player's main hand, respecting unbreaking enchantments natively.
+         */
+        ItemStack tool = player.getMainHandItem();
+        if (!tool.isEmpty() && player.gameMode.getGameModeForPlayer().isSurvival()) {
+            tool.hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
+        }
+
         int blocksMined = island.incrementBlocksMined();
 
         if (brokenState.is(Blocks.OAK_LOG)) {
@@ -104,10 +115,7 @@ public class BlockBreakHandler {
             player.teleportTo(player.getX(), pos.getY() + 1.05, player.getZ());
         }
 
-        /*
-         * FIX BUG: SPONDING CHEST RESTORATION
-         * Evaluate the chest spawn sequence directly on the brokenState BEFORE clearing it to AIR.
-         */
+        // Evaluate the chest spawn sequence directly
         boolean spawnedChest = rewardManager.trySpawnSupplyChest(
                 player,
                 world,
@@ -115,28 +123,19 @@ public class BlockBreakHandler {
         );
 
         if (!spawnedChest) {
-            /*
-             * FIX BUG: SAND/GRAVEL GRAVITY COLLAPSE
-             * To completely stop sand and gravel from falling into the void, we place a
-             * permanent invisible structural block (like a Barrier) or Bedrock directly underneath
-             * the OneBlock coordinate space before regeneration fires.
-             */
+            // Sand/Gravel support floor handling
             BlockPos supportPos = pos.below();
             if (world.getBlockState(supportPos).isAir()) {
-                // Places a solid barrier block underneath so sand/gravel has structural friction
                 world.setBlockAndUpdate(supportPos, Blocks.BARRIER.defaultBlockState());
             }
 
-            // Regenerate the tile safely now that the floor is secured
             oneBlockManager.regenerate(island);
         }
 
-        // Fallback safety valve
         if (world.getBlockState(pos).isAir()) {
             world.setBlockAndUpdate(pos, Blocks.BEDROCK.defaultBlockState());
         }
 
-        // Cleanly restore player gravity settings on the next processing loop frame
         if (isStandingOnBlock) {
             world.getServer().execute(() -> {
                 player.setNoGravity(false);
