@@ -67,30 +67,99 @@ public class OneBlockRewardManager {
 
             return false;
         }
-        // Create a small helper loop to determine how many item slots to populate (e.g., 1 to 3 items)
-        int itemsToSpawn = 1 + random.nextInt(3);
+
+        java.util.Random random = new java.util.Random();
+        int itemsToSpawn = 1 + random.nextInt(3); // Populates between 1 to 3 items per chest
 
         for (int i = 0; i < itemsToSpawn; i++) {
             int randomItem = random.nextInt(100);
-            // Randomly scatter items across a standard chest's 27 inventory slots
-            int randomSlot = random.nextInt(27);
+            int randomSlot = random.nextInt(27); // Standard chest inventory slots (0 - 26)
 
-            if (randomItem < 25) { // 25% Chance for baseline water/ice rules
-                chest.setItem(randomSlot, new ItemStack(Items.WATER_BUCKET));
-            } else if (randomItem < 45) { // 20% Chance for progressive build building blocks
-                chest.setItem(randomSlot, new ItemStack(Items.DIRT, 4)); // Drop bundles instead of just 1
-            } else if (randomItem < 60) { // 15% Chance for iron utility
-                chest.setItem(randomSlot, new ItemStack(Items.IRON_INGOT, 2));
-            } else if (randomItem < 75) { // 15% Chance for vital lava access
-                chest.setItem(randomSlot, new ItemStack(Items.LAVA_BUCKET));
-            } else if (randomItem < 85) { // 10% Chance for seeds/farming starters
-                chest.setItem(randomSlot, new ItemStack(Items.OAK_SAPLING, 2));
-            } else if (randomItem < 93) { // 8% Chance for gold economy tools
-                chest.setItem(randomSlot, new ItemStack(Items.GOLD_INGOT, 2));
-            } else if (randomItem < 98) { // 5% Chance for endgame diamond blocks
-                chest.setItem(randomSlot, new ItemStack(Items.DIAMOND));
-            } else { // 2% Chance for rare weapon sets
-                chest.setItem(randomSlot, new ItemStack(Items.IRON_SWORD)); // Nerfed to Iron to preserve game tiers!
+            switch (stage) {
+                case 1: // 🌍 STAGE 1: Plains (Farming & Skyblock Essentials)
+                    if (randomItem < 30) {
+                        chest.setItem(randomSlot, new ItemStack(Items.WATER_BUCKET));
+                    } else if (randomItem < 60) {
+                        chest.setItem(randomSlot, new ItemStack(Items.DIRT, 4));
+                    } else if (randomItem < 80) {
+                        chest.setItem(randomSlot, new ItemStack(Items.OAK_SAPLING, 2));
+                    } else {
+                        chest.setItem(randomSlot, new ItemStack(Items.BREAD, 3));
+                    }
+                    break;
+
+                case 2: // 🪨 STAGE 2: Underground (Mining Tools & Lava Integration)
+                    if (randomItem < 25) {
+                        chest.setItem(randomSlot, new ItemStack(Items.LAVA_BUCKET));
+                    } else if (randomItem < 60) {
+                        chest.setItem(randomSlot, new ItemStack(Items.IRON_INGOT, 3));
+                    } else if (randomItem < 85) {
+                        chest.setItem(randomSlot, new ItemStack(Items.COAL, 8));
+                    } else {
+                        chest.setItem(randomSlot, new ItemStack(Items.STONE_PICKAXE));
+                    }
+                    break;
+
+                case 3: // ❄️ STAGE 3: Winter (Thermal Controls & Building)
+                    if (randomItem < 40) {
+                        chest.setItem(randomSlot, new ItemStack(Items.TORCH, 8));
+                    } else if (randomItem < 70) {
+                        chest.setItem(randomSlot, new ItemStack(Items.SPRUCE_SAPLING, 2));
+                    } else {
+                        chest.setItem(randomSlot, new ItemStack(Items.IRON_PICKAXE));
+                    }
+                    break;
+
+                case 4: // 🌊 STAGE 4: Ocean (Aquatic Exploration Utility)
+                    if (randomItem < 40) {
+                        chest.setItem(randomSlot, new ItemStack(Items.PRISMARINE_SHARD, 4));
+                    } else if (randomItem < 70) {
+                        chest.setItem(randomSlot, new ItemStack(Items.COOKED_COD, 4));
+                    } else {
+                        chest.setItem(randomSlot, new ItemStack(Items.HEART_OF_THE_SEA));
+                    }
+                    break;
+
+                case 5: // 🪓 STAGE 5: Jungle / Swamp (Advanced Growth & Minerals)
+                    if (randomItem < 35) {
+                        chest.setItem(randomSlot, new ItemStack(Items.GOLD_INGOT, 3));
+                    } else if (randomItem < 70) {
+                        chest.setItem(randomSlot, new ItemStack(Items.MELON_SEEDS, 2));
+                    } else if (randomItem < 95) {
+                        chest.setItem(randomSlot, new ItemStack(Items.LAPIS_LAZULI, 4));
+                    } else {
+                        chest.setItem(randomSlot, new ItemStack(Items.DIAMOND)); // Rare early surprise item
+                    }
+                    break;
+
+                case 6: // 🌋 STAGE 6: Nether (Dimensional Travel Materials)
+                    if (randomItem < 40) {
+                        chest.setItem(randomSlot, new ItemStack(Items.NETHER_WART, 2));
+                    } else if (randomItem < 70) {
+                        chest.setItem(randomSlot, new ItemStack(Items.GLOWSTONE_DUST, 4));
+                    } else if (randomItem < 95) {
+                        chest.setItem(randomSlot, new ItemStack(Items.GOLD_NUGGET, 8));
+                    } else {
+                        chest.setItem(randomSlot, new ItemStack(Items.NETHERITE_SCRAP)); // Ultra-rare endgame ore element
+                    }
+                    break;
+
+                case 7: // 🔮 STAGE 7: Stronghold & End (Endgame Mastery Equipment)
+                    if (randomItem < 30) {
+                        chest.setItem(randomSlot, new ItemStack(Items.DIAMOND, 2));
+                    } else if (randomItem < 60) {
+                        chest.setItem(randomSlot, new ItemStack(Items.ENDER_PEARL, 2));
+                    } else if (randomItem < 90) {
+                        chest.setItem(randomSlot, new ItemStack(Items.END_STONE, 8));
+                    } else {
+                        // 10% Chance for the ultimate weapon prize now safely placed at the final stage!
+                        chest.setItem(randomSlot, new ItemStack(Items.NETHERITE_SWORD));
+                    }
+                    break;
+
+                default:
+                    chest.setItem(randomSlot, new ItemStack(Items.COBBLESTONE, 16));
+                    break;
             }
         }
 
