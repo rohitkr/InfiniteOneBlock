@@ -146,5 +146,8 @@ public class BlockBreakHandler {
             player.sendSystemMessage(Component.literal("One Block: " + blocksMined + " blocks mined."));
             player.sendSystemMessage(Component.literal("Stage " + currentPhase.getId() + ": " + currentPhase.getName()));
         }
+
+        // Marks the saved data as changed. Minecraft will now auto-save these stats to the HDD periodically.
+        com.infiniteoneblock.event.ModStateSaver.save(world.getServer());
     }
 }

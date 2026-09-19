@@ -83,6 +83,13 @@ public class PlayerJoinHandler {
         );
 
         /*
+         * ─── ✅ THE CRITICAL PROGRESSION SYNCHRONIZER ───
+         * Load disk counters directly AFTER the new island object container maps
+         * into server memory. This ensures it applies to the new instance correctly.
+         */
+        com.infiniteoneblock.event.ModStateSaver.load(server);
+
+        /*
          * ========================================
          * CREATE THE ONE BLOCK
          * ========================================

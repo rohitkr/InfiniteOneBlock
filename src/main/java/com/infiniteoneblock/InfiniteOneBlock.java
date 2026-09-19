@@ -56,6 +56,9 @@ public class InfiniteOneBlock implements ModInitializer {
 					);
 
 					oneBlockManager.initialize();
+					// ─── ADD THIS LINE HERE ───
+					// This reads the stored NBT stats from your HDD immediately on server boot
+//					com.infiniteoneblock.event.ModStateSaver.load(server);
 				}
 		);
 
