@@ -115,11 +115,14 @@ public class BlockBreakHandler {
             player.teleportTo(player.getX(), pos.getY() + 1.05, player.getZ());
         }
 
+        int stage = oneBlockManager.getCurrentStage(island);
+
         // Evaluate the chest spawn sequence directly
         boolean spawnedChest = rewardManager.trySpawnSupplyChest(
                 player,
                 world,
-                pos
+                pos,
+                stage
         );
 
         if (!spawnedChest) {

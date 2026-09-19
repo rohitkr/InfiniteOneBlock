@@ -27,29 +27,19 @@ public class OneBlockRewardManager {
     public boolean trySpawnSupplyChest(
             ServerPlayer player,
             ServerLevel world,
-            BlockPos oneBlockPosition
+            BlockPos oneBlockPosition,
+            int stage
     ) {
 
-        if (random.nextDouble()
-                >= SUPPLY_CHEST_CHANCE) {
-
+        if (random.nextDouble() >= SUPPLY_CHEST_CHANCE) {
             return false;
         }
-// BACKUP of getting a place to spawn chest
-//        BlockPos chestPosition =
-//                findChestPosition(
-//                        world,
-//                        oneBlockPosition
-//                );
-        BlockPos chestPosition = oneBlockPosition;
 
-        if (chestPosition == null) {
-
+        if (oneBlockPosition == null) {
             System.out.println(
                     "[InfiniteOneBlock] "
                             + "No free position found for supply chest."
             );
-
             return false;
         }
 
@@ -57,7 +47,7 @@ public class OneBlockRewardManager {
          * Place the chest.
          */
         world.setBlock(
-                chestPosition,
+                oneBlockPosition,
                 Blocks.CHEST.defaultBlockState(),
                 3
         );
@@ -67,7 +57,7 @@ public class OneBlockRewardManager {
          * block entity.
          */
         if (!(world.getBlockEntity(
-                chestPosition
+                oneBlockPosition
         ) instanceof ChestBlockEntity chest)) {
 
             System.out.println(
@@ -77,44 +67,32 @@ public class OneBlockRewardManager {
 
             return false;
         }
+        // Create a small helper loop to determine how many item slots to populate (e.g., 1 to 3 items)
+        int itemsToSpawn = 1 + random.nextInt(3);
 
-        /*
-         * Guaranteed water supply.
-         */
-        chest.setItem(
-                0,
-                new ItemStack(
-                        Items.WATER_BUCKET
-                )
-        );
+        for (int i = 0; i < itemsToSpawn; i++) {
+            int randomItem = random.nextInt(100);
+            // Randomly scatter items across a standard chest's 27 inventory slots
+            int randomSlot = random.nextInt(27);
 
-        /*
-         * Guaranteed lava supply.
-         */
-        chest.setItem(
-                1,
-                new ItemStack(
-                        Items.LAVA_BUCKET
-                )
-        );
-
-        /*
-         * A little additional useful material.
-         */
-        chest.setItem(
-                2,
-                new ItemStack(
-                        Items.IRON_INGOT,
-                        2
-                )
-        );
-
-        chest.setItem(
-                3,
-                new ItemStack(
-                        Items.FLINT
-                )
-        );
+            if (randomItem < 25) { // 25% Chance for baseline water/ice rules
+                chest.setItem(randomSlot, new ItemStack(Items.WATER_BUCKET));
+            } else if (randomItem < 45) { // 20% Chance for progressive build building blocks
+                chest.setItem(randomSlot, new ItemStack(Items.DIRT, 4)); // Drop bundles instead of just 1
+            } else if (randomItem < 60) { // 15% Chance for iron utility
+                chest.setItem(randomSlot, new ItemStack(Items.IRON_INGOT, 2));
+            } else if (randomItem < 75) { // 15% Chance for vital lava access
+                chest.setItem(randomSlot, new ItemStack(Items.LAVA_BUCKET));
+            } else if (randomItem < 85) { // 10% Chance for seeds/farming starters
+                chest.setItem(randomSlot, new ItemStack(Items.OAK_SAPLING, 2));
+            } else if (randomItem < 93) { // 8% Chance for gold economy tools
+                chest.setItem(randomSlot, new ItemStack(Items.GOLD_INGOT, 2));
+            } else if (randomItem < 98) { // 5% Chance for endgame diamond blocks
+                chest.setItem(randomSlot, new ItemStack(Items.DIAMOND));
+            } else { // 2% Chance for rare weapon sets
+                chest.setItem(randomSlot, new ItemStack(Items.IRON_SWORD)); // Nerfed to Iron to preserve game tiers!
+            }
+        }
 
         chest.setChanged();
 
@@ -126,53 +104,9 @@ public class OneBlockRewardManager {
 
         System.out.println(
                 "[InfiniteOneBlock] Supply chest spawned at "
-                        + chestPosition
+                        + oneBlockPosition
         );
 
         return true;
-    }
-
-    /**
-     * Finds a nearby free position for the chest.
-     *
-     * We deliberately keep the chest close to the
-     * OneBlock so the player can see it.
-     */
-    private BlockPos findChestPosition(
-            ServerLevel world,
-            BlockPos oneBlockPosition
-    ) {
-
-        BlockPos[] candidates = {
-
-                oneBlockPosition.east(),
-
-                oneBlockPosition.west(),
-
-                oneBlockPosition.north(),
-
-                oneBlockPosition.south(),
-
-                oneBlockPosition.above(),
-
-                oneBlockPosition.east().above(),
-
-                oneBlockPosition.west().above(),
-
-                oneBlockPosition.north().above(),
-
-                oneBlockPosition.south().above()
-        };
-
-        for (BlockPos candidate :
-                candidates) {
-
-            if (world.isEmptyBlock(candidate)) {
-
-                return candidate;
-            }
-        }
-
-        return null;
     }
 }
