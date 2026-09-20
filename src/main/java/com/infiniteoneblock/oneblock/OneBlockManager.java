@@ -15,6 +15,8 @@ import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.validation.PathAllowList;
+import com.infiniteoneblock.event.MonsterTntEntity;
 
 import java.util.Random;
 
@@ -41,9 +43,25 @@ public class OneBlockManager {
     public void regenerate(Island island) {
         ServerLevel world = island.getWorld();
         BlockPos position = island.getOneBlockPosition();
+        int stage = getCurrentStage(island);
 
-        if (random.nextFloat() < 0.05f) {
-            int stage = getCurrentStage(island);
+        System.out.println("Current Stage: " + stage);
+        if (stage > 2 && random.nextInt(100) < 80) {
+            MonsterTntEntity tnt = new MonsterTntEntity(
+                    world,
+                    position.getX() + 0.5,
+                    position.getY() + 1.0,
+                    position.getZ() + 0.5,
+                    stage,
+                    this
+            );
+            world.addFreshEntity(tnt);
+            // Keeps floor solid under the ticking fuse so infinite block doesn't vanish
+            world.setBlock(position, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+            return;
+        }
+
+        if (random.nextInt(100) < 1) {
             EntityType<?> selectedMobType = getMobTypeForStage(stage);
 
             if (selectedMobType != null) {
@@ -72,15 +90,39 @@ public class OneBlockManager {
     }
 
     /**
+     * TNT rendering logic to spawn the mobs on explosion
+     * render the tnt
+     */
+    private Boolean getTNTRender (int stage, ServerLevel world, BlockPos position) {
+        net.minecraft.world.entity.item.PrimedTnt tnt = new net.minecraft.world.entity.item.PrimedTnt(world, position.getX() + 0.5, position.getY(), position.getZ() + 0.5, null);
+        // 2. Set the fuse timer in ticks (20 ticks = 1 second. 60 ticks = 3 seconds to run away!)
+        tnt.setFuse(300);
+
+        // 3. Attach a custom text tag to this specific TNT so our explosion system knows it contains mobs
+        tnt.addTag("OneBlockMobTNT_Stage_" + stage);
+
+        // 4. Force inject the primed animating TNT entity into the world map
+        world.addFreshEntity(tnt);
+
+        // Place a safe stone base block so the player has something to stand on while running
+        world.setBlock(position, Blocks.COBBLESTONE.defaultBlockState(), 3);
+        return true;
+    }
+
+    private EntityType<?> getMob(int stage) {
+        return getMobType("warden");
+    }
+
+    /**
      * Unwraps the Optional Reference container natively required by Minecraft 26.2 registry maps.
      */
-    private EntityType<?> getMobType(String path) {
+    public EntityType<?> getMobType(String path) {
         return BuiltInRegistries.ENTITY_TYPE.get(Identifier.fromNamespaceAndPath("minecraft", path))
                 .map(Holder::value)
                 .orElse(null);
     }
 
-    private EntityType<?> getMobTypeForStage(int stage) {
+    public EntityType<?> getMobTypeForStage(int stage) {
         int roll = random.nextInt(100);
         // ============================================================
         // STAGE 1: Plains (100% Peaceful/Food Animals)
