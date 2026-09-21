@@ -74,8 +74,6 @@ public class PlayerJoinHandler {
          * ========================================
          * CREATE ISLAND ON VOID WORLD
          * ========================================
-         *
-         * Safely invokes your custom IslandManager calculations inside the target void dimension map.
          */
         Island island = islandManager.createIsland(
                 player.getUUID(),
@@ -83,7 +81,6 @@ public class PlayerJoinHandler {
         );
 
         /*
-         * ─── ✅ THE CRITICAL PROGRESSION SYNCHRONIZER ───
          * Load disk counters directly AFTER the new island object container maps
          * into server memory. This ensures it applies to the new instance correctly.
          */

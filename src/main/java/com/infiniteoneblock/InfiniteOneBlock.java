@@ -12,10 +12,13 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.Identifier; // Use Identifier instead of ResourceLocation
 import net.minecraft.world.level.Level;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.gamerules.GameRules;
 
 
 public class InfiniteOneBlock implements ModInitializer {
@@ -135,7 +138,6 @@ public class InfiniteOneBlock implements ModInitializer {
 				}
 			}
 		});
-
 
 		System.out.println(
 				"========================================"

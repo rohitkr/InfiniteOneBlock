@@ -5,6 +5,7 @@
   "has_skylight": true,
   "has_ceiling": false,
   "ambient_light": 0.0,
+  "has_fixed_time": false,
 
   "has_ender_dragon_fight": false,
 
@@ -25,5 +26,6 @@
   "logical_height": 384,
 
   "infiniburn": "#minecraft:infiniburn_overworld",
-  "effects": "minecraft:overworld"
+  "effects": "minecraft:the_end",
+  "default_clock": "minecraft:overworld"
 }
