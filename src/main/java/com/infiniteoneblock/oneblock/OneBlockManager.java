@@ -46,14 +46,15 @@ public class OneBlockManager {
         int stage = getCurrentStage(island);
 
         System.out.println("Current Stage: " + stage);
-        if (stage > 2 && random.nextInt(100) < 80) {
+        if (stage > 2 && random.nextInt(100) < 5) {
             MonsterTntEntity tnt = new MonsterTntEntity(
                     world,
                     position.getX() + 0.5,
                     position.getY() + 1.0,
                     position.getZ() + 0.5,
                     stage,
-                    this
+                    this,
+                    island
             );
             world.addFreshEntity(tnt);
             // Keeps floor solid under the ticking fuse so infinite block doesn't vanish
@@ -61,8 +62,8 @@ public class OneBlockManager {
             return;
         }
 
-        if (random.nextInt(100) < 1) {
-            EntityType<?> selectedMobType = getMobTypeForStage(stage);
+        if (random.nextInt(100) < 20) {
+            EntityType<?> selectedMobType = getMobTypeForStage(stage, island);
 
             if (selectedMobType != null) {
                 BlockPos spawnPos = position.above();
@@ -143,39 +144,87 @@ public class OneBlockManager {
                 .orElse(null);
     }
 
-    public EntityType<?> getMobTypeForStage(int stage) {
+    // Updated signature to take the Island object so we can read boss tracking states
+    public EntityType<?> getMobTypeForStage(int stage, Island island) {
         int roll = random.nextInt(100);
+
         // ============================================================
-        // STAGE 1: Plains (100% Peaceful/Food Animals)
+        // 🟥 STAGE 1: Plains
         // ============================================================
         if (stage == 1) {
-            if (roll < 40) return getMobType("chicken");
-            if (roll < 70) return getMobType("pig");
+            if (roll < 3) return getMobType("villager");
+            if (roll < 8) return getMobType("zombie"); // Baby zombie handled in TNT class
+            if (roll < 45) return getMobType("chicken");
+            if (roll < 75) return getMobType("pig");
             return getMobType("sheep");
         }
+
         // ============================================================
-        // STAGE 6: Nether (70% Nether Mobs, 30% Critical Food Animals)
+        // 🪨 STAGE 2: Underground (SAFE - Warden Completely Removed!)
+        // ============================================================
+        else if (stage == 2) {
+            if (roll < 40) return getMobType("zombie");
+            if (roll < 75) return getMobType("skeleton");
+            if (roll < 95) return getMobType("creeper");
+            return getMobType("cow");
+        }
+
+        // ============================================================
+        // ❄️ STAGE 3: Winter
+        // ============================================================
+        else if (stage == 3) {
+            if (roll < 20) return getMobType("stray");
+            if (roll < 60) return getMobType("skeleton");
+            return getMobType("sheep");
+        }
+
+        // ============================================================
+        // 🌊 STAGE 4: Ocean (Elder Guardian SPAWNS ONLY ONCE)
+        // ============================================================
+        else if (stage == 4) {
+            // If the roll lands on the boss slot AND this island has NEVER spawned it yet
+            if (roll < 5 && island != null && !island.hasSpawnedStage4Boss()) {
+                island.setSpawnedStage4Boss(true); // Lock it forever!
+                System.out.println("[InfiniteOneBlock] BOSS WARNING: An Elder Guardian has risen from the deep!");
+                return getMobType("elder_guardian");
+            }
+            // Fallback if boss already spawned or roll missed
+            if (roll < 50) return getMobType("guardian");
+            if (roll < 85) return getMobType("drowned");
+            return getMobType("chicken");
+        }
+
+        // ============================================================
+        // 🌴 STAGE 5: Jungle / Swamp
+        // ============================================================
+        else if (stage == 5) {
+            if (roll < 15) return getMobType("witch");
+            if (roll < 60) return getMobType("slime");
+            return getMobType("cow");
+        }
+
+        // ============================================================
+        // 🌋 STAGE 6: Nether (Wither Skeleton Grinding)
         // ============================================================
         else if (stage == 6) {
-            if (roll < 40) return getMobType("piglin");
-            if (roll < 70) return getMobType("zombified_piglin");
-            // Remaining 30% keeps food supplies spawning even in Hell
-            if (roll < 85) return getMobType("cow");
-            return getMobType("pig");
+            if (roll < 25) return getMobType("wither_skeleton");
+            if (roll < 60) return getMobType("piglin");
+            if (roll < 90) return getMobType("zombified_piglin");
+            return getMobType("blaze");
         }
+
         // ============================================================
-        // ALL OTHER STAGES (Underground, Winter, Ocean, Jungle, End)
-        // Dynamic Blend: 70% Monsters for challenge, 30% Food Animals for survival
+        // 👁️ STAGE 7: Stronghold & End (Ultimate Warden Boss Spawns ONLY ONCE)
         // ============================================================
         else {
-            // 70% Chance for Hostile Monsters
-            if (roll < 30) return getMobType("zombie");
-            if (roll < 55) return getMobType("skeleton");
-            if (roll < 70) return getMobType("creeper");
-            // 30% Chance for Food & Utility Animals (Always available so players don't starve)
-            if (roll < 80) return getMobType("cow");     // Leather & Beef
-            if (roll < 90) return getMobType("pig");     // Porkchops
-            return getMobType("sheep");                  // Wool & Mutton
+            // Warden shifted here as an ultimate endgame boss threat! Spawns ONLY ONCE.
+            if (roll < 4 && island != null && !island.hasSpawnedStage7Boss()) {
+                island.setSpawnedStage7Boss(true); // Lock it forever!
+                System.out.println("[InfiniteOneBlock] BOSS WARNING: The Warden has broken out of the ancient portal!");
+                return getMobType("warden");
+            }
+            if (roll < 60) return getMobType("enderman");
+            return getMobType("shulker");
         }
     }
 

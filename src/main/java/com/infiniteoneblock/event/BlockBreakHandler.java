@@ -78,8 +78,18 @@ public class BlockBreakHandler {
 
         List<ItemStack> drops = brokenState.getDrops(lootBuilder);
         for (ItemStack drop : drops) {
-            if (!player.getInventory().add(drop)) {
-                Block.popResource(world, player.blockPosition().above(), drop);
+//            if (!player.getInventory().add(drop)) {
+//                Block.popResource(world, player.blockPosition().above(), drop);
+//            }
+            /*
+             * ✅ FIXED: VANILLA PHYSICS RESTORATION
+             * Instead of injecting the drop directly into player inventory slots,
+             * we spawn the item resource entity precisely 1.2 blocks ABOVE the broken coordinate.
+             * This makes the item pop out into the air visually, perfectly matching vanilla behaviors!
+             */
+            if (!drop.isEmpty()) {
+                BlockPos airSpawnPos = pos.above();
+                Block.popResource(world, airSpawnPos, drop);
             }
         }
 

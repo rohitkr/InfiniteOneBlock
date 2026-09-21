@@ -17,6 +17,17 @@ public class Island {
     private int blocksMined;
     private int oakLogsCollected;
 
+
+    private boolean spawnedStage4Boss = false;
+    private boolean spawnedStage7Boss = false;
+
+    public boolean hasSpawnedStage4Boss() { return this.spawnedStage4Boss; }
+    public void setSpawnedStage4Boss(boolean val) { this.spawnedStage4Boss = val; }
+
+    public boolean hasSpawnedStage7Boss() { return this.spawnedStage7Boss; }
+    public void setSpawnedStage7Boss(boolean val) { this.spawnedStage7Boss = val; }
+
+
     public Island(
             UUID ownerId,
             ServerLevel world,
