@@ -119,6 +119,24 @@ public class InfiniteOneBlock implements ModInitializer {
 
 		blockPlaceHandler.register();
 
+		net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
+			// When a primed Creeper or TNT entity vanishes/explodes from the world layer
+			if (entity instanceof net.minecraft.world.entity.monster.Creeper || entity instanceof net.minecraft.world.entity.item.PrimedTnt) {
+				var islandManager = InfiniteOneBlock.getIslandManager();
+				if (islandManager != null) {
+					// Query online players to see if their specific OneBlock was caught in the blast radius
+					for (net.minecraft.server.level.ServerPlayer player : world.getServer().getPlayerList().getPlayers()) {
+						com.infiniteoneblock.island.Island island = islandManager.getIsland(player.getUUID());
+						if (island != null) {
+							// Instantly runs our self-healing logic to replace the block if it went missing
+							this.oneBlockManager.validateAndRepairBlock(island);
+						}
+					}
+				}
+			}
+		});
+
+
 		System.out.println(
 				"========================================"
 		);

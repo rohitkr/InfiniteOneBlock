@@ -110,7 +110,28 @@ public class OneBlockManager {
     }
 
     public EntityType<?> getMob(int stage) {
-        return getMobType("sheep");
+        return getMobType("creeper");
+    }
+
+    /**
+     * ✅ HIGH-PERFORMANCE BLOCK HEALING VALVE
+     * Directly checks if the specific OneBlock coordinates have changed to Air.
+     * If empty, it immediately generates the next progression tile.
+     */
+    public void validateAndRepairBlock(Island island) {
+        ServerLevel world = island.getWorld();
+        BlockPos position = island.getOneBlockPosition();
+
+        // Check if the block at the island coordinate was turned to air (by Creepers, TNT, or blocks breaking)
+        if (world.getBlockState(position).isAir()) {
+            System.out.println("[InfiniteOneBlock] Empty space detected at OneBlock coordinate! Regenerating instantly.");
+
+            // Re-run your verified block regeneration system
+            this.regenerate(island);
+
+            // Force save to disk so data matches the new block placement metrics
+            com.infiniteoneblock.event.ModStateSaver.save(world.getServer());
+        }
     }
 
     /**
