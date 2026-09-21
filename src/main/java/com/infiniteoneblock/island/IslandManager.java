@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public class IslandManager {
 
-    private static final int ISLAND_Y = 128;
+    private static final int ISLAND_Y = 80;
 
     private final Map<UUID, Island> islands = new HashMap<>();
 

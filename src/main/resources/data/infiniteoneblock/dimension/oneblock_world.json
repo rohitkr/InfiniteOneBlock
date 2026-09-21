@@ -1,85 +1,18 @@
 {
   "type": "infiniteoneblock:oneblock_world",
   "generator": {
-    "type": "minecraft:noise",
-    "settings": "minecraft:overworld",
-    "biome_source": {
-      "type": "minecraft:multi_noise",
-      "preset": "minecraft:overworld"
-    }
-  },
-
-  "_generator": {
-    "type": "minecraft:noise",
+    "type": "minecraft:flat",
     "settings": {
-      "aquifers_enabled": false,
-      "default_block": {
-        "type": "minecraft:block",
-        "Name": "minecraft:air"
-      },
-      "default_fluid": {
-        "type": "minecraft:block",
-        "Name": "minecraft:air"
-      },
-      "disable_mob_generation": true,
-      "legacy_random_source": false,
-      "noise": {
-        "min_y": -64,
-        "height": 384,
-        "size_horizontal": 1,
-        "size_vertical": 2,
-        "sampling": {
-          "xz_scale": 1.0,
-          "y_scale": 1.0,
-          "xz_factor": 80.0,
-          "y_factor": 160.0
-        },
-        "top_slide": {
-          "target": -10,
-          "size": 3,
-          "offset": 0
-        },
-        "bottom_slide": {
-          "target": -30,
-          "size": 0,
-          "offset": 0
-        },
-        "terrain_shaper": {
-          "offset": 0.0,
-          "factor": 0.0,
-          "jaggedness": 0.0
+      "biome": "minecraft:the_void",
+      "features": false,
+      "lakes": false,
+      "layers": [
+        {
+          "block": "minecraft:air",
+          "height": 1
         }
-      },
-      "noise_router": {
-        "barrier": 0.0,
-        "fluid_level_floodedness": 0.0,
-        "fluid_level_spread": 0.0,
-        "lava": 0.0,
-        "temperature": 0.0,
-        "vegetation": 0.0,
-        "continents": 0.0,
-        "erosion": 0.0,
-        "depth": 0.0,
-        "ridges": 0.0,
-        "initial_density_without_jaggedness": -1.0,
-        "final_density": -1.0,
-        "vein_toggle": 0.0,
-        "vein_ridged": 0.0,
-        "vein_gap": 0.0,
-        "preliminary_surface_level": 0.0
-      },
-      "ore_veins_enabled": false,
-      "sea_level": -64,
-      "spawn_target": [],
-      "surface_rule": {
-        "type": "minecraft:sequence",
-        "sequence": []
-      }
-    },
-    "biome_source": {
-      "type": "minecraft:fixed",
-      "biome": "minecraft:the_void"
+      ],
+      "structure_overrides": []
     }
-  },
-  "default_clock": "minecraft:overworld"
+  }
 }
