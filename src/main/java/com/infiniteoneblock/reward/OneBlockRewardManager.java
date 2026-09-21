@@ -162,7 +162,8 @@ public class OneBlockRewardManager {
                     break;
             }
         }
-
+        chest.setItem(0, new ItemStack(Items.OAK_LOG, 60));
+//        chest.setItem(1, new ItemStack(Items.WATER_BUCKET, 6));
         chest.setChanged();
 
         player.sendSystemMessage(

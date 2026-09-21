@@ -64,7 +64,7 @@ public class MonsterTntEntity extends PrimedTnt {
                 int limit = 1;
 
                 if (selectedMobType.equals(manager.getMobType("zombie")) ||
-                        selectedMobType.equals(manager.getMobType("skeleton")) ||
+//                        selectedMobType.equals(manager.getMobType("skeleton")) ||
                         selectedMobType.equals(manager.getMobType("piglin")) ||
                         selectedMobType.equals(manager.getMobType("cow")) ||
                         selectedMobType.equals(manager.getMobType("pig")) ||

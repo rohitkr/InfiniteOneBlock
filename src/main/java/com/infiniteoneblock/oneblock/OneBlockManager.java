@@ -109,8 +109,8 @@ public class OneBlockManager {
         return true;
     }
 
-    private EntityType<?> getMob(int stage) {
-        return getMobType("warden");
+    public EntityType<?> getMob(int stage) {
+        return getMobType("sheep");
     }
 
     /**
