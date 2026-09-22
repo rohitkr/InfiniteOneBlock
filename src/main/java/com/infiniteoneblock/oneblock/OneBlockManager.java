@@ -57,8 +57,7 @@ public class OneBlockManager {
                     island
             );
             world.addFreshEntity(tnt);
-            // Keeps floor solid under the ticking fuse so infinite block doesn't vanish
-            world.setBlock(position, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+            placeStableOneBlock(island, world, position, Blocks.GRASS_BLOCK.defaultBlockState());
             return;
         }
 
@@ -73,7 +72,7 @@ public class OneBlockManager {
                     mob.setPersistenceRequired();
                 }
 
-                world.setBlock(position, Blocks.GRASS_BLOCK.defaultBlockState(), 3);
+                placeStableOneBlock(island, world, position, Blocks.GRASS_BLOCK.defaultBlockState());
                 return;
             }
         }
@@ -81,13 +80,19 @@ public class OneBlockManager {
         Block nextBlock = getNextBlock(island);
         BlockState nextState = nextBlock.defaultBlockState();
 
+        island.updateGravitySupport(nextState);
         if (nextState.getFluidState().isEmpty() && nextState.canSurvive(world, position)) {
             world.setBlock(position, nextState, 3);
             return;
         }
 
         System.out.println("[InfiniteOneBlock] Invalid OneBlock candidate: " + nextBlock);
-        world.setBlock(position, Blocks.STONE.defaultBlockState(), 3);
+        placeStableOneBlock(island, world, position, Blocks.STONE.defaultBlockState());
+    }
+
+    private void placeStableOneBlock(Island island, ServerLevel world, BlockPos position, BlockState state) {
+        island.updateGravitySupport(state);
+        world.setBlock(position, state, 3);
     }
 
     /**

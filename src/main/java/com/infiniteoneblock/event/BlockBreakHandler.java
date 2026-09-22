@@ -136,12 +136,6 @@ public class BlockBreakHandler {
         );
 
         if (!spawnedChest) {
-            // Sand/Gravel support floor handling
-            BlockPos supportPos = pos.below();
-            if (world.getBlockState(supportPos).isAir()) {
-                world.setBlockAndUpdate(supportPos, Blocks.BARRIER.defaultBlockState());
-            }
-
             oneBlockManager.regenerate(island);
         }
 

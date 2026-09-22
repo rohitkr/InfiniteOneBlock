@@ -3,6 +3,9 @@
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.FallingBlock;
+import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.UUID;
 
@@ -59,6 +62,26 @@ public class Island {
 
     public BlockPos getOneBlockPosition() {
         return oneBlockPosition;
+    }
+
+    public BlockPos getSupportPosition() {
+        return oneBlockPosition.below();
+    }
+
+    public void updateGravitySupport(BlockState oneBlockState) {
+        BlockPos supportPos = getSupportPosition();
+        BlockState below = world.getBlockState(supportPos);
+
+        if (oneBlockState.getBlock() instanceof FallingBlock) {
+            if (below.isAir()) {
+                world.setBlockAndUpdate(supportPos, Blocks.BARRIER.defaultBlockState());
+            }
+            return;
+        }
+
+        if (below.is(Blocks.BARRIER)) {
+            world.setBlockAndUpdate(supportPos, Blocks.AIR.defaultBlockState());
+        }
     }
 
     public BlockPos getSpawnPosition() {

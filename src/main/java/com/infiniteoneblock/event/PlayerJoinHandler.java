@@ -50,8 +50,12 @@ public class PlayerJoinHandler {
         if (islandManager.hasIsland(player.getUUID())) {
             System.out.println("[InfiniteOneBlock] Player already has an island.");
 
+            Island existingIsland = islandManager.getIsland(player.getUUID());
+            if (existingIsland != null) {
+                existingIsland.updateGravitySupport(voidWorld.getBlockState(existingIsland.getOneBlockPosition()));
+            }
+
             if (!player.level().dimension().equals(InfiniteOneBlock.ONEBLOCK_WORLD_KEY)) {
-                Island existingIsland = islandManager.getIsland(player.getUUID());
                 if (existingIsland != null) {
                     BlockPos existingSpawn = existingIsland.getSpawnPosition();
 
