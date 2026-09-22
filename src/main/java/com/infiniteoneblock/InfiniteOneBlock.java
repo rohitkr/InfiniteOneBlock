@@ -59,10 +59,16 @@ public class InfiniteOneBlock implements ModInitializer {
 					);
 
 					oneBlockManager.initialize();
-					// ─── ADD THIS LINE HERE ───
-					// This reads the stored NBT stats from your HDD immediately on server boot
-//					com.infiniteoneblock.event.ModStateSaver.load(server);
+					com.infiniteoneblock.event.ModStateSaver.load(server);
 				}
+		);
+
+		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(
+				server -> com.infiniteoneblock.event.ModStateSaver.save(server)
+		);
+
+		net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register(
+				(handler, server) -> com.infiniteoneblock.event.ModStateSaver.save(server)
 		);
 
 //		ServerLifecycleEvents.SERVER_STARTED.register(

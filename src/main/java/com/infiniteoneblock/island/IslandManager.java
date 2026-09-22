@@ -3,6 +3,7 @@ package com.infiniteoneblock.island;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -36,6 +37,22 @@ public class IslandManager {
         islands.put(playerId, island);
 
         return island;
+    }
+
+    public Island ensureIsland(UUID playerId, ServerLevel world) {
+        Island existing = islands.get(playerId);
+        if (existing != null) {
+            return existing;
+        }
+        return createIsland(playerId, world);
+    }
+
+    public Collection<Island> getAllIslands() {
+        return islands.values();
+    }
+
+    public void clear() {
+        islands.clear();
     }
 
     public Island getIsland(UUID playerId) {
