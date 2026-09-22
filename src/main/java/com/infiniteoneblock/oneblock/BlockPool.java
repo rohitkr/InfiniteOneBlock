@@ -38,6 +38,17 @@ public class BlockPool {
         totalWeight += weight;
     }
 
+    public void addAll(BlockPool other, double weightScale) {
+        if (other == null || weightScale <= 0) {
+            return;
+        }
+
+        for (BlockEntry entry : other.blocks) {
+            int scaledWeight = Math.max(1, (int) Math.round(entry.weight * weightScale));
+            add(entry.block, scaledWeight);
+        }
+    }
+
     /**
      * Returns a completely random block from the pool.
      */

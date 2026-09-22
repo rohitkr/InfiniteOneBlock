@@ -14,11 +14,45 @@ import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Supplier;
 
 public class OneBlockRewardManager {
 
     private static final double SUPPLY_CHEST_CHANCE = 0.05;
-    private static final double EXTRA_BASIC_CHANCE = 0.35;
+    private static final double EXTRA_LOOT_CHANCE = 0.5;
+
+    private static final List<LootEntry> LOOT_TABLE = List.of(
+            new LootEntry(1, 28, () -> new ItemStack(Items.OAK_LOG, 4)),
+            new LootEntry(1, 24, () -> new ItemStack(Items.COBBLESTONE, 8)),
+            new LootEntry(1, 16, () -> new ItemStack(Items.WHEAT_SEEDS, 4)),
+            new LootEntry(1, 14, () -> new ItemStack(Items.BREAD, 4)),
+            new LootEntry(1, 14, () -> new ItemStack(Items.TORCH, 8)),
+            new LootEntry(1, 12, () -> new ItemStack(Items.OAK_SAPLING, 2)),
+            new LootEntry(2, 16, () -> new ItemStack(Items.COAL, 8)),
+            new LootEntry(2, 14, () -> new ItemStack(Items.IRON_INGOT, 3)),
+            new LootEntry(2, 6, () -> new ItemStack(Items.FLINT_AND_STEEL)),
+            new LootEntry(2, 6, () -> new ItemStack(Items.STONE_PICKAXE)),
+            new LootEntry(3, 8, () -> new ItemStack(Items.SPRUCE_SAPLING, 2)),
+            new LootEntry(3, 6, () -> new ItemStack(Items.IRON_PICKAXE)),
+            new LootEntry(4, 10, () -> new ItemStack(Items.PRISMARINE_SHARD, 4)),
+            new LootEntry(4, 8, () -> new ItemStack(Items.COOKED_COD, 4)),
+            new LootEntry(4, 2, () -> new ItemStack(Items.HEART_OF_THE_SEA)),
+            new LootEntry(5, 8, () -> new ItemStack(Items.GOLD_INGOT, 3)),
+            new LootEntry(5, 8, () -> new ItemStack(Items.MELON_SEEDS, 2)),
+            new LootEntry(5, 8, () -> new ItemStack(Items.LAPIS_LAZULI, 4)),
+            new LootEntry(5, 3, () -> new ItemStack(Items.DIAMOND)),
+            new LootEntry(6, 8, () -> new ItemStack(Items.NETHER_WART, 2)),
+            new LootEntry(6, 6, () -> new ItemStack(Items.BLAZE_ROD, 2)),
+            new LootEntry(6, 6, () -> new ItemStack(Items.ENDER_PEARL, 2)),
+            new LootEntry(6, 6, () -> new ItemStack(Items.GLOWSTONE_DUST, 4)),
+            new LootEntry(6, 2, () -> new ItemStack(Items.NETHERITE_SCRAP)),
+            new LootEntry(7, 6, () -> new ItemStack(Items.ENDER_EYE, 2)),
+            new LootEntry(7, 6, () -> new ItemStack(Items.ENDER_PEARL, 4)),
+            new LootEntry(7, 4, () -> new ItemStack(Items.DIAMOND, 2)),
+            new LootEntry(7, 6, () -> new ItemStack(Items.CHORUS_FRUIT, 8)),
+            new LootEntry(7, 3, () -> new ItemStack(Items.SHULKER_SHELL, 2)),
+            new LootEntry(7, 1, () -> new ItemStack(Items.ELYTRA))
+    );
 
     private final Random random = new Random();
 
@@ -46,14 +80,15 @@ public class OneBlockRewardManager {
 
         List<ItemStack> loot = new ArrayList<>();
         addMissingEssentials(loot, island, stage);
-        loot.add(randomStageLoot(stage));
+        loot.add(randomBasicLoot());
+        loot.add(randomCumulativeLoot(stage));
 
-        if (random.nextDouble() < EXTRA_BASIC_CHANCE) {
+        if (random.nextDouble() < EXTRA_LOOT_CHANCE) {
             loot.add(randomBasicLoot());
         }
 
         if (random.nextBoolean()) {
-            loot.add(randomStageLoot(stage));
+            loot.add(randomCumulativeLoot(stage));
         }
 
         int slot = 0;
@@ -86,60 +121,40 @@ public class OneBlockRewardManager {
         return switch (random.nextInt(6)) {
             case 0 -> new ItemStack(Items.WATER_BUCKET);
             case 1 -> new ItemStack(Items.LAVA_BUCKET);
-            case 2 -> new ItemStack(Items.OAK_SAPLING, 2);
+            case 2 -> new ItemStack(Items.OAK_LOG, random.nextInt(15) + 1);
             case 3 -> new ItemStack(Items.BREAD, 4);
             case 4 -> new ItemStack(Items.TORCH, 8);
-            default -> new ItemStack(Items.COBBLESTONE, 16);
+            default -> new ItemStack(Items.COBBLESTONE, random.nextInt(15) + 1);
         };
     }
 
-    private ItemStack randomStageLoot(int stage) {
-        int roll = random.nextInt(100);
+    private ItemStack randomCumulativeLoot(int stage) {
+        int totalWeight = 0;
+        for (LootEntry entry : LOOT_TABLE) {
+            if (stage >= entry.minStage()) {
+                totalWeight += entry.weight();
+            }
+        }
 
-        return switch (stage) {
-            case 1 -> {
-                if (roll < 40) yield new ItemStack(Items.OAK_SAPLING, 2);
-                if (roll < 70) yield new ItemStack(Items.WHEAT_SEEDS, 4);
-                yield new ItemStack(Items.BREAD, 3);
+        if (totalWeight <= 0) {
+            return new ItemStack(Items.COBBLESTONE, 16);
+        }
+
+        int roll = random.nextInt(totalWeight);
+        int current = 0;
+        for (LootEntry entry : LOOT_TABLE) {
+            if (stage < entry.minStage()) {
+                continue;
             }
-            case 2 -> {
-                if (roll < 35) yield new ItemStack(Items.IRON_INGOT, 3);
-                if (roll < 65) yield new ItemStack(Items.COAL, 8);
-                if (roll < 85) yield new ItemStack(Items.FLINT_AND_STEEL);
-                yield new ItemStack(Items.STONE_PICKAXE);
+            current += entry.weight();
+            if (roll < current) {
+                return entry.stack().get();
             }
-            case 3 -> {
-                if (roll < 40) yield new ItemStack(Items.TORCH, 8);
-                if (roll < 70) yield new ItemStack(Items.SPRUCE_SAPLING, 2);
-                yield new ItemStack(Items.IRON_PICKAXE);
-            }
-            case 4 -> {
-                if (roll < 40) yield new ItemStack(Items.PRISMARINE_SHARD, 4);
-                if (roll < 70) yield new ItemStack(Items.COOKED_COD, 4);
-                yield new ItemStack(Items.HEART_OF_THE_SEA);
-            }
-            case 5 -> {
-                if (roll < 35) yield new ItemStack(Items.GOLD_INGOT, 3);
-                if (roll < 70) yield new ItemStack(Items.MELON_SEEDS, 2);
-                if (roll < 90) yield new ItemStack(Items.LAPIS_LAZULI, 4);
-                yield new ItemStack(Items.DIAMOND);
-            }
-            case 6 -> {
-                if (roll < 35) yield new ItemStack(Items.NETHER_WART, 2);
-                if (roll < 60) yield new ItemStack(Items.BLAZE_ROD, 2);
-                if (roll < 80) yield new ItemStack(Items.ENDER_PEARL, 2);
-                if (roll < 95) yield new ItemStack(Items.GLOWSTONE_DUST, 4);
-                yield new ItemStack(Items.NETHERITE_SCRAP);
-            }
-            case 7 -> {
-                if (roll < 25) yield new ItemStack(Items.ENDER_EYE, 2);
-                if (roll < 50) yield new ItemStack(Items.ENDER_PEARL, 4);
-                if (roll < 70) yield new ItemStack(Items.DIAMOND, 2);
-                if (roll < 85) yield new ItemStack(Items.CHORUS_FRUIT, 8);
-                if (roll < 95) yield new ItemStack(Items.SHULKER_SHELL, 2);
-                yield new ItemStack(Items.ELYTRA);
-            }
-            default -> new ItemStack(Items.COBBLESTONE, 16);
-        };
+        }
+
+        return new ItemStack(Items.COBBLESTONE, 16);
+    }
+
+    private record LootEntry(int minStage, int weight, Supplier<ItemStack> stack) {
     }
 }

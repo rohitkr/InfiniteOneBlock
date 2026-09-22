@@ -9,13 +9,13 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.validation.PathAllowList;
 import com.infiniteoneblock.event.MonsterTntEntity;
 
 import java.util.Random;
@@ -62,19 +62,14 @@ public class OneBlockManager {
         }
 
         if (random.nextInt(100) < (3 + stage)) {
-                EntityType<?> selectedMobType = getMobTypeForStage(stage, island, false);
+            EntityType<?> selectedMobType = pickDirectMobType(stage);
 
-                if (selectedMobType != null) {
-                    BlockPos spawnPos = position.above();
-
-                    var entity = selectedMobType.spawn(world, spawnPos, EntitySpawnReason.EVENT);
-                    if (entity instanceof Mob mob) {
-                        mob.setPersistenceRequired();
-                    }
-
-                    placeStableOneBlock(island, world, position, Blocks.GRASS_BLOCK.defaultBlockState());
-                    return;
-                }
+            if (selectedMobType != null) {
+                BlockPos spawnPos = position.above();
+                spawnPreparedMob(world, selectedMobType, spawnPos, island);
+                placeStableOneBlock(island, world, position, Blocks.GRASS_BLOCK.defaultBlockState());
+                return;
+            }
         }
 
         Block nextBlock = getNextBlock(island);
@@ -95,49 +90,90 @@ public class OneBlockManager {
         world.setBlock(position, state, 3);
     }
 
-    /**
-     * TNT rendering logic to spawn the mobs on explosion
-     * render the tnt
-     */
-    private Boolean getTNTRender (int stage, ServerLevel world, BlockPos position) {
-        net.minecraft.world.entity.item.PrimedTnt tnt = new net.minecraft.world.entity.item.PrimedTnt(world, position.getX() + 0.5, position.getY(), position.getZ() + 0.5, null);
-        // 2. Set the fuse timer in ticks (20 ticks = 1 second. 60 ticks = 3 seconds to run away!)
-        tnt.setFuse(300);
-
-        // 3. Attach a custom text tag to this specific TNT so our explosion system knows it contains mobs
-        tnt.addTag("OneBlockMobTNT_Stage_" + stage);
-
-        // 4. Force inject the primed animating TNT entity into the world map
-        world.addFreshEntity(tnt);
-
-        // Place a safe stone base block so the player has something to stand on while running
-        world.setBlock(position, Blocks.COBBLESTONE.defaultBlockState(), 3);
-        return true;
-    }
-
-    public EntityType<?> getMob(int stage) {
-        return getMobType("creeper");
-    }
-
-    /**
-     * ✅ HIGH-PERFORMANCE BLOCK HEALING VALVE
-     * Directly checks if the specific OneBlock coordinates have changed to Air.
-     * If empty, it immediately generates the next progression tile.
-     */
-    public void validateAndRepairBlock(Island island) {
-        ServerLevel world = island.getWorld();
-        BlockPos position = island.getOneBlockPosition();
-
-        // Check if the block at the island coordinate was turned to air (by Creepers, TNT, or blocks breaking)
-        if (world.getBlockState(position).isAir()) {
-            System.out.println("[InfiniteOneBlock] Empty space detected at OneBlock coordinate! Regenerating instantly.");
-
-            // Re-run your verified block regeneration system
-            this.regenerate(island);
-
-            // Force save to disk so data matches the new block placement metrics
-            com.infiniteoneblock.event.ModStateSaver.save(world.getServer());
+    public void onMonsterTntExplode(ServerLevel world, BlockPos spawnPos, int stage, Island island) {
+        MobSpawnTable.SuperMob superMob = MobSpawnTable.rollTntSuper(stage, island, random);
+        if (superMob != null) {
+            spawnSuperMob(world, spawnPos, island, superMob);
+            return;
         }
+
+        spawnTntWave(world, spawnPos, island);
+    }
+
+    private void spawnSuperMob(ServerLevel world, BlockPos spawnPos, Island island, MobSpawnTable.SuperMob superMob) {
+        EntityType<?> type = getMobType(superMob.entityPath());
+        if (type == null) {
+            spawnTntWave(world, spawnPos, island);
+            return;
+        }
+
+        if (superMob.needsWater()) {
+            placeGuardianWater(world, spawnPos, island);
+        }
+
+        spawnPreparedMob(world, type, spawnPos, island);
+        superMob.markSpawned(island);
+        announceSuperMob(island, superMob.announceMessage());
+    }
+
+    private void spawnTntWave(ServerLevel world, BlockPos spawnPos, Island island) {
+        int count = MobSpawnTable.rollWaveCount(random);
+        for (int i = 0; i < count; i++) {
+            EntityType<?> type = getMobType(MobSpawnTable.pickTntWaveMob(random));
+            if (type == null) {
+                continue;
+            }
+
+            double offsetX = (random.nextDouble() - 0.5) * 1.5;
+            double offsetZ = (random.nextDouble() - 0.5) * 1.5;
+            BlockPos scatteredSpawnPos = new BlockPos(
+                    (int) (spawnPos.getX() + offsetX),
+                    spawnPos.getY(),
+                    (int) (spawnPos.getZ() + offsetZ)
+            );
+            spawnPreparedMob(world, type, scatteredSpawnPos, island);
+        }
+    }
+
+    private void placeGuardianWater(ServerLevel world, BlockPos origin, Island island) {
+        BlockPos oneBlock = island.getOneBlockPosition();
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                for (int dy = 0; dy <= 1; dy++) {
+                    BlockPos pos = origin.offset(dx, dy, dz);
+                    if (pos.equals(oneBlock)) {
+                        continue;
+                    }
+                    if (world.getBlockState(pos).isAir()) {
+                        world.setBlock(pos, Blocks.WATER.defaultBlockState(), 3);
+                    }
+                }
+            }
+        }
+    }
+
+    private EntityType<?> pickDirectMobType(int stage) {
+        return getMobType(MobSpawnTable.pickDirectMob(stage, false, random));
+    }
+
+    private void spawnPreparedMob(ServerLevel world, EntityType<?> type, BlockPos spawnPos, Island island) {
+        var entity = type.spawn(world, spawnPos, EntitySpawnReason.EVENT);
+        if (!(entity instanceof Mob mob)) {
+            return;
+        }
+
+        mob.setPersistenceRequired();
+        ServerPlayer owner = getIslandOwner(island);
+        if (owner != null) {
+            mob.setTarget(owner);
+        }
+    }
+
+    private ServerPlayer getIslandOwner(Island island) {
+        if (island == null || island.getWorld() == null || island.getWorld().getServer() == null) {
+            return null;
+        }
+        return island.getWorld().getServer().getPlayerList().getPlayer(island.getOwnerId());
     }
 
     /**
@@ -149,77 +185,26 @@ public class OneBlockManager {
                 .orElse(null);
     }
 
-    // Updated signature to take the Island object so we can read boss tracking states
-    public EntityType<?> getMobTypeForStage(int stage, Island island) {
-        return getMobTypeForStage(stage, island, false);
-    }
+    /**
+     * HIGH-PERFORMANCE BLOCK HEALING VALVE
+     * Directly checks if the specific OneBlock coordinates have changed to Air.
+     * If empty, it immediately generates the next progression tile.
+     */
+    public void validateAndRepairBlock(Island island) {
+        ServerLevel world = island.getWorld();
+        BlockPos position = island.getOneBlockPosition();
 
-    public EntityType<?> getMobTypeForStage(int stage, Island island, boolean hostileOnly) {
-        int roll = random.nextInt(100);
+        if (world.getBlockState(position).isAir()) {
+            System.out.println("[InfiniteOneBlock] Empty space detected at OneBlock coordinate! Regenerating instantly.");
 
-        if (stage == 1) {
-            if (!hostileOnly && roll < 3) return getMobType("villager");
-            if (roll < 8 || hostileOnly) return getMobType("zombie");
-            if (roll < 45) return getMobType("chicken");
-            if (roll < 75) return getMobType("pig");
-            return getMobType("sheep");
+            this.regenerate(island);
+
+            com.infiniteoneblock.event.ModStateSaver.save(world.getServer());
         }
-
-        if (stage == 2) {
-            if (roll < 40) return getMobType("zombie");
-            if (roll < 75) return getMobType("skeleton");
-            if (roll < 95 || hostileOnly) return getMobType("creeper");
-            return hostileOnly ? getMobType("zombie") : getMobType("cow");
-        }
-
-        if (stage == 3) {
-            if (roll < 20) return getMobType("stray");
-            if (roll < 60 || hostileOnly) return getMobType("skeleton");
-            return hostileOnly ? getMobType("stray") : getMobType("sheep");
-        }
-
-        if (stage == 4) {
-            if (island != null && !island.hasSpawnedGuardian()) {
-                island.setSpawnedGuardian(true);
-                announceSuperMob(island, "A Guardian has appeared! This super mob spawns only once.");
-                return getMobType("guardian");
-            }
-            if (roll < 70 || hostileOnly) return getMobType("drowned");
-            return getMobType("cod");
-        }
-
-        if (stage == 5) {
-            if (roll < 15) return getMobType("witch");
-            if (roll < 60 || hostileOnly) return getMobType("slime");
-            return hostileOnly ? getMobType("witch") : getMobType("cow");
-        }
-
-        if (stage == 6) {
-            if (island != null && !island.hasSpawnedWitherSkeleton()) {
-                island.setSpawnedWitherSkeleton(true);
-                announceSuperMob(island, "A Wither Skeleton has appeared! This super mob spawns only once.");
-                return getMobType("wither_skeleton");
-            }
-            if (roll < 40) return getMobType("piglin");
-            if (roll < 75) return getMobType("zombified_piglin");
-            return getMobType("blaze");
-        }
-
-        if (island != null && !island.hasSpawnedWarden()) {
-            island.setSpawnedWarden(true);
-            announceSuperMob(island, "The Warden has broken out! This super mob spawns only once.");
-            return getMobType("warden");
-        }
-        if (roll < 70) return getMobType("enderman");
-        return getMobType("silverfish");
     }
 
     private void announceSuperMob(Island island, String message) {
-        var server = island.getWorld().getServer();
-        if (server == null) {
-            return;
-        }
-        var player = server.getPlayerList().getPlayer(island.getOwnerId());
+        ServerPlayer player = getIslandOwner(island);
         if (player != null) {
             player.sendSystemMessage(net.minecraft.network.chat.Component.literal(message));
         }

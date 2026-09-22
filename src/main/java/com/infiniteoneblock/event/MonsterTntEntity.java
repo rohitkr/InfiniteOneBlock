@@ -1,6 +1,6 @@
 package com.infiniteoneblock.event;
 
-import com.infiniteoneblock.island.Island; // ✅ FIXED: Added missing import for your Island data tracking model
+import com.infiniteoneblock.island.Island;
 import com.infiniteoneblock.oneblock.OneBlockManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -11,8 +11,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -32,17 +30,12 @@ public class MonsterTntEntity extends PrimedTnt {
                 level);
 
         this.setPos(x, y, z);
-        this.setFuse(60); // 3-second countdown animation
+        this.setFuse(60);
         this.stage = stage;
         this.manager = manager;
         this.island = island;
     }
 
-    /*
-     * ─── ✅ COSMETIC ENTITY OVERRIDE ───
-     * This intercepts the client-side renderer. Instead of drawing a vanilla red TNT block,
-     * it forces the floating entity to look like a Crying Obsidian block!
-     */
     @Override
     public BlockState getBlockState() {
         return Blocks.CRYING_OBSIDIAN.defaultBlockState();
@@ -54,42 +47,10 @@ public class MonsterTntEntity extends PrimedTnt {
             ServerLevel serverWorld = (ServerLevel) this.level();
             BlockPos spawnPos = this.blockPosition();
 
-            // Play safe cosmetic explosion assets
             serverWorld.playSound(null, spawnPos, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.BLOCKS, 1.0F, 1.0F);
             serverWorld.sendParticles(ParticleTypes.EXPLOSION_EMITTER, spawnPos.getX() + 0.5, spawnPos.getY() + 0.5, spawnPos.getZ() + 0.5, 1, 0.0D, 0.0D, 0.0D, 0.0D);
 
-            // ✅ FIXED: Updated to pass both stage and island to respect once-per-stage boss checking parameters
-            EntityType<?> selectedMobType = manager.getMobTypeForStage(this.stage, this.island, true);
-
-            if (selectedMobType != null) {
-                java.util.Random rand = new java.util.Random();
-                int count = 0;
-                int limit = 1;
-
-                if (selectedMobType.equals(manager.getMobType("zombie"))
-                        || selectedMobType.equals(manager.getMobType("skeleton"))
-                        || selectedMobType.equals(manager.getMobType("drowned"))
-                        || selectedMobType.equals(manager.getMobType("piglin"))
-                        || selectedMobType.equals(manager.getMobType("zombified_piglin"))) {
-                    limit = 3 + rand.nextInt(3);
-                }
-
-                while (count < limit) {
-                    double offsetX = (rand.nextDouble() - 0.5) * 1.5;
-                    double offsetZ = (rand.nextDouble() - 0.5) * 1.5;
-                    BlockPos scatteredSpawnPos = new BlockPos(
-                            (int) (spawnPos.getX() + offsetX),
-                            spawnPos.getY(),
-                            (int) (spawnPos.getZ() + offsetZ)
-                    );
-
-                    var entity = selectedMobType.spawn(serverWorld, scatteredSpawnPos, EntitySpawnReason.EVENT);
-                    if (entity instanceof Mob mob) {
-                        mob.setPersistenceRequired();
-                    }
-                    count++;
-                }
-            }
+            manager.onMonsterTntExplode(serverWorld, spawnPos, this.stage, this.island);
 
             this.discard();
             return;

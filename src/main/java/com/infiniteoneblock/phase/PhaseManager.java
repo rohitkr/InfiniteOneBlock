@@ -648,4 +648,8 @@ public class PhaseManager {
                 stage - 1
         );
     }
+
+    public int getPhaseCount() {
+        return phases.size();
+    }
 }
