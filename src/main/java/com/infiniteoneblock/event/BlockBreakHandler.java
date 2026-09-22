@@ -137,7 +137,8 @@ public class BlockBreakHandler {
                 player,
                 world,
                 pos,
-                stage
+                stage,
+                island
         );
 
         if (!spawnedChest) {

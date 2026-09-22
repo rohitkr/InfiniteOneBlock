@@ -62,7 +62,7 @@ public class OneBlockManager {
         }
 
         if (random.nextInt(100) < (3 + stage)) {
-                EntityType<?> selectedMobType = getMobTypeForStage(stage, island);
+                EntityType<?> selectedMobType = getMobTypeForStage(stage, island, false);
 
                 if (selectedMobType != null) {
                     BlockPos spawnPos = position.above();
@@ -151,11 +151,15 @@ public class OneBlockManager {
 
     // Updated signature to take the Island object so we can read boss tracking states
     public EntityType<?> getMobTypeForStage(int stage, Island island) {
+        return getMobTypeForStage(stage, island, false);
+    }
+
+    public EntityType<?> getMobTypeForStage(int stage, Island island, boolean hostileOnly) {
         int roll = random.nextInt(100);
 
         if (stage == 1) {
-            if (roll < 3) return getMobType("villager");
-            if (roll < 8) return getMobType("zombie");
+            if (!hostileOnly && roll < 3) return getMobType("villager");
+            if (roll < 8 || hostileOnly) return getMobType("zombie");
             if (roll < 45) return getMobType("chicken");
             if (roll < 75) return getMobType("pig");
             return getMobType("sheep");
@@ -164,14 +168,14 @@ public class OneBlockManager {
         if (stage == 2) {
             if (roll < 40) return getMobType("zombie");
             if (roll < 75) return getMobType("skeleton");
-            if (roll < 95) return getMobType("creeper");
-            return getMobType("cow");
+            if (roll < 95 || hostileOnly) return getMobType("creeper");
+            return hostileOnly ? getMobType("zombie") : getMobType("cow");
         }
 
         if (stage == 3) {
             if (roll < 20) return getMobType("stray");
-            if (roll < 60) return getMobType("skeleton");
-            return getMobType("sheep");
+            if (roll < 60 || hostileOnly) return getMobType("skeleton");
+            return hostileOnly ? getMobType("stray") : getMobType("sheep");
         }
 
         if (stage == 4) {
@@ -180,14 +184,14 @@ public class OneBlockManager {
                 announceSuperMob(island, "A Guardian has appeared! This super mob spawns only once.");
                 return getMobType("guardian");
             }
-            if (roll < 70) return getMobType("drowned");
+            if (roll < 70 || hostileOnly) return getMobType("drowned");
             return getMobType("cod");
         }
 
         if (stage == 5) {
             if (roll < 15) return getMobType("witch");
-            if (roll < 60) return getMobType("slime");
-            return getMobType("cow");
+            if (roll < 60 || hostileOnly) return getMobType("slime");
+            return hostileOnly ? getMobType("witch") : getMobType("cow");
         }
 
         if (stage == 6) {

@@ -48,6 +48,9 @@ public class ModStateSaver {
                     if (values.length > 4) {
                         island.setSpawnedWarden(parseFlag(values[4]));
                     }
+                    if (values.length > 5) {
+                        island.setGrantedEssentialsMask(Integer.parseInt(values[5].trim()));
+                    }
                 } catch (Exception ignored) {}
             }
         } catch (IOException e) {
@@ -77,6 +80,8 @@ public class ModStateSaver {
                                     + (island.hasSpawnedWitherSkeleton() ? 1 : 0)
                                     + ","
                                     + (island.hasSpawnedWarden() ? 1 : 0)
+                                    + ","
+                                    + island.getGrantedEssentialsMask()
                     );
                 }
             }

@@ -59,22 +59,19 @@ public class MonsterTntEntity extends PrimedTnt {
             serverWorld.sendParticles(ParticleTypes.EXPLOSION_EMITTER, spawnPos.getX() + 0.5, spawnPos.getY() + 0.5, spawnPos.getZ() + 0.5, 1, 0.0D, 0.0D, 0.0D, 0.0D);
 
             // ✅ FIXED: Updated to pass both stage and island to respect once-per-stage boss checking parameters
-            EntityType<?> selectedMobType = manager.getMobTypeForStage(this.stage, this.island);
+            EntityType<?> selectedMobType = manager.getMobTypeForStage(this.stage, this.island, true);
 
             if (selectedMobType != null) {
                 java.util.Random rand = new java.util.Random();
                 int count = 0;
                 int limit = 1;
 
-                // ✅ FIXED: Cleaned up the loose inline comments to ensure seamless boolean check evaluation
-                if (selectedMobType.equals(manager.getMobType("zombie")) ||
-//                        selectedMobType.equals(manager.getMobType("skeleton")) ||
-                        selectedMobType.equals(manager.getMobType("piglin")) ||
-                        selectedMobType.equals(manager.getMobType("cow")) ||
-                        selectedMobType.equals(manager.getMobType("pig")) ||
-                        selectedMobType.equals(manager.getMobType("sheep"))
-                ) {
-                    limit = 4 + rand.nextInt(3); // Groups of 4 to 6
+                if (selectedMobType.equals(manager.getMobType("zombie"))
+                        || selectedMobType.equals(manager.getMobType("skeleton"))
+                        || selectedMobType.equals(manager.getMobType("drowned"))
+                        || selectedMobType.equals(manager.getMobType("piglin"))
+                        || selectedMobType.equals(manager.getMobType("zombified_piglin"))) {
+                    limit = 3 + rand.nextInt(3);
                 }
 
                 while (count < limit) {

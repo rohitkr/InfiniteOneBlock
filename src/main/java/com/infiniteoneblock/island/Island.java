@@ -24,6 +24,7 @@ public class Island {
     private boolean spawnedGuardian = false;
     private boolean spawnedWitherSkeleton = false;
     private boolean spawnedWarden = false;
+    private int grantedEssentialsMask = 0;
 
     public boolean hasSpawnedGuardian() { return this.spawnedGuardian; }
     public void setSpawnedGuardian(boolean val) { this.spawnedGuardian = val; }
@@ -33,6 +34,22 @@ public class Island {
 
     public boolean hasSpawnedWarden() { return this.spawnedWarden; }
     public void setSpawnedWarden(boolean val) { this.spawnedWarden = val; }
+
+    public boolean hasGrantedEssential(int bitMask) {
+        return (grantedEssentialsMask & bitMask) != 0;
+    }
+
+    public void grantEssential(int bitMask) {
+        grantedEssentialsMask |= bitMask;
+    }
+
+    public int getGrantedEssentialsMask() {
+        return grantedEssentialsMask;
+    }
+
+    public void setGrantedEssentialsMask(int grantedEssentialsMask) {
+        this.grantedEssentialsMask = Math.max(0, grantedEssentialsMask);
+    }
 
 
     public Island(
