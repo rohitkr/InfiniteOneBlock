@@ -76,31 +76,31 @@ public class OneBlockRewardManager {
             int randomSlot = random.nextInt(27); // Standard chest inventory slots (0 - 26)
 
             switch (stage) {
-                case 1: // 🌍 STAGE 1: Plains (Farming & Skyblock Essentials)
+                case 1:
                     if (randomItem < 30) {
                         chest.setItem(randomSlot, new ItemStack(Items.WATER_BUCKET));
-                    } else if (randomItem < 60) {
-                        chest.setItem(randomSlot, new ItemStack(Items.DIRT, 4));
-                    } else if (randomItem < 80) {
+                    } else if (randomItem < 55) {
                         chest.setItem(randomSlot, new ItemStack(Items.OAK_SAPLING, 2));
+                    } else if (randomItem < 80) {
+                        chest.setItem(randomSlot, new ItemStack(Items.WHEAT_SEEDS, 4));
                     } else {
                         chest.setItem(randomSlot, new ItemStack(Items.BREAD, 3));
                     }
                     break;
 
-                case 2: // 🪨 STAGE 2: Underground (Mining Tools & Lava Integration)
+                case 2:
                     if (randomItem < 25) {
                         chest.setItem(randomSlot, new ItemStack(Items.LAVA_BUCKET));
-                    } else if (randomItem < 60) {
+                    } else if (randomItem < 55) {
                         chest.setItem(randomSlot, new ItemStack(Items.IRON_INGOT, 3));
-                    } else if (randomItem < 85) {
+                    } else if (randomItem < 80) {
                         chest.setItem(randomSlot, new ItemStack(Items.COAL, 8));
                     } else {
-                        chest.setItem(randomSlot, new ItemStack(Items.STONE_PICKAXE));
+                        chest.setItem(randomSlot, new ItemStack(Items.FLINT_AND_STEEL));
                     }
                     break;
 
-                case 3: // ❄️ STAGE 3: Winter (Thermal Controls & Building)
+                case 3:
                     if (randomItem < 40) {
                         chest.setItem(randomSlot, new ItemStack(Items.TORCH, 8));
                     } else if (randomItem < 70) {
@@ -110,7 +110,7 @@ public class OneBlockRewardManager {
                     }
                     break;
 
-                case 4: // 🌊 STAGE 4: Ocean (Aquatic Exploration Utility)
+                case 4:
                     if (randomItem < 40) {
                         chest.setItem(randomSlot, new ItemStack(Items.PRISMARINE_SHARD, 4));
                     } else if (randomItem < 70) {
@@ -120,40 +120,45 @@ public class OneBlockRewardManager {
                     }
                     break;
 
-                case 5: // 🪓 STAGE 5: Jungle / Swamp (Advanced Growth & Minerals)
+                case 5:
                     if (randomItem < 35) {
                         chest.setItem(randomSlot, new ItemStack(Items.GOLD_INGOT, 3));
                     } else if (randomItem < 70) {
                         chest.setItem(randomSlot, new ItemStack(Items.MELON_SEEDS, 2));
-                    } else if (randomItem < 95) {
+                    } else if (randomItem < 90) {
                         chest.setItem(randomSlot, new ItemStack(Items.LAPIS_LAZULI, 4));
                     } else {
-                        chest.setItem(randomSlot, new ItemStack(Items.DIAMOND)); // Rare early surprise item
+                        chest.setItem(randomSlot, new ItemStack(Items.DIAMOND));
                     }
                     break;
 
-                case 6: // 🌋 STAGE 6: Nether (Dimensional Travel Materials)
-                    if (randomItem < 40) {
+                case 6:
+                    if (randomItem < 35) {
                         chest.setItem(randomSlot, new ItemStack(Items.NETHER_WART, 2));
-                    } else if (randomItem < 70) {
-                        chest.setItem(randomSlot, new ItemStack(Items.GLOWSTONE_DUST, 4));
+                    } else if (randomItem < 60) {
+                        chest.setItem(randomSlot, new ItemStack(Items.BLAZE_ROD, 2));
+                    } else if (randomItem < 80) {
+                        chest.setItem(randomSlot, new ItemStack(Items.ENDER_PEARL, 2));
                     } else if (randomItem < 95) {
-                        chest.setItem(randomSlot, new ItemStack(Items.GOLD_NUGGET, 8));
+                        chest.setItem(randomSlot, new ItemStack(Items.GLOWSTONE_DUST, 4));
                     } else {
-                        chest.setItem(randomSlot, new ItemStack(Items.NETHERITE_SCRAP)); // Ultra-rare endgame ore element
+                        chest.setItem(randomSlot, new ItemStack(Items.NETHERITE_SCRAP));
                     }
                     break;
 
-                case 7: // 🔮 STAGE 7: Stronghold & End (Endgame Mastery Equipment)
-                    if (randomItem < 30) {
+                case 7:
+                    if (randomItem < 25) {
+                        chest.setItem(randomSlot, new ItemStack(Items.ENDER_EYE, 2));
+                    } else if (randomItem < 50) {
+                        chest.setItem(randomSlot, new ItemStack(Items.ENDER_PEARL, 4));
+                    } else if (randomItem < 70) {
                         chest.setItem(randomSlot, new ItemStack(Items.DIAMOND, 2));
-                    } else if (randomItem < 60) {
-                        chest.setItem(randomSlot, new ItemStack(Items.ENDER_PEARL, 2));
-                    } else if (randomItem < 90) {
-                        chest.setItem(randomSlot, new ItemStack(Items.END_STONE, 8));
+                    } else if (randomItem < 85) {
+                        chest.setItem(randomSlot, new ItemStack(Items.CHORUS_FRUIT, 8));
+                    } else if (randomItem < 95) {
+                        chest.setItem(randomSlot, new ItemStack(Items.SHULKER_SHELL, 2));
                     } else {
-                        // 10% Chance for the ultimate weapon prize now safely placed at the final stage!
-                        chest.setItem(randomSlot, new ItemStack(Items.NETHERITE_SWORD));
+                        chest.setItem(randomSlot, new ItemStack(Items.ELYTRA));
                     }
                     break;
 
@@ -162,8 +167,6 @@ public class OneBlockRewardManager {
                     break;
             }
         }
-        chest.setItem(0, new ItemStack(Items.OAK_LOG, 60));
-//        chest.setItem(1, new ItemStack(Items.WATER_BUCKET, 6));
         chest.setChanged();
 
         player.sendSystemMessage(

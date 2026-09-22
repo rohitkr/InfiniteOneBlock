@@ -172,6 +172,16 @@ public class PhaseManager {
                 5
         );
 
+        pool.add(
+                Blocks.COPPER_ORE,
+                4
+        );
+
+        pool.add(
+                Blocks.GOLD_ORE,
+                2
+        );
+
         /*
          * Keep some Phase 1 materials alive after
          * progression.
@@ -256,6 +266,11 @@ public class PhaseManager {
                 3
         );
 
+        pool.add(
+                Blocks.LAPIS_ORE,
+                3
+        );
+
         phases.add(
                 new Phase(
                         3,
@@ -327,6 +342,11 @@ public class PhaseManager {
         pool.add(
                 Blocks.IRON_ORE,
                 3
+        );
+
+        pool.add(
+                Blocks.GOLD_ORE,
+                4
         );
 
         phases.add(
@@ -402,6 +422,21 @@ public class PhaseManager {
         pool.add(
                 Blocks.GRASS_BLOCK,
                 8
+        );
+
+        pool.add(
+                Blocks.REDSTONE_ORE,
+                6
+        );
+
+        pool.add(
+                Blocks.GOLD_ORE,
+                4
+        );
+
+        pool.add(
+                Blocks.DIAMOND_ORE,
+                2
         );
 
         phases.add(
@@ -484,6 +519,16 @@ public class PhaseManager {
                 1
         );
 
+        pool.add(
+                Blocks.GLOWSTONE,
+                8
+        );
+
+        pool.add(
+                Blocks.OBSIDIAN,
+                6
+        );
+
         phases.add(
                 new Phase(
                         6,
@@ -545,18 +590,25 @@ public class PhaseManager {
         );
 
         pool.add(
-                Blocks.END_STONE_BRICKS,
-                8
-        );
-
-        pool.add(
                 Blocks.CRYING_OBSIDIAN,
                 5
         );
 
-        /*
-         * Rare end-game block.
-         */
+        pool.add(
+                Blocks.DIAMOND_ORE,
+                6
+        );
+
+        pool.add(
+                Blocks.END_PORTAL_FRAME,
+                5
+        );
+
+        pool.add(
+                Blocks.END_ROD,
+                4
+        );
+
         pool.add(
                 Blocks.RESPAWN_ANCHOR,
                 2

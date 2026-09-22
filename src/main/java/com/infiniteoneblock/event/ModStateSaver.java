@@ -28,14 +28,25 @@ public class ModStateSaver {
 
                 try {
                     UUID uuid = UUID.fromString(parts[0].trim());
-                    int minedCount = Integer.parseInt(parts[1].trim());
+                    String[] values = parts[1].trim().split(",");
 
                     Island island = islandManager.getIsland(uuid);
-                    if (island != null) {
-                        // Force synchronization parameters back into active variables
-                        while (island.getBlocksMined() < minedCount) {
-                            island.incrementBlocksMined();
-                        }
+                    if (island == null) {
+                        continue;
+                    }
+
+                    island.setBlocksMined(Integer.parseInt(values[0].trim()));
+                    if (values.length > 1) {
+                        island.setOakLogsCollected(Integer.parseInt(values[1].trim()));
+                    }
+                    if (values.length > 2) {
+                        island.setSpawnedGuardian(parseFlag(values[2]));
+                    }
+                    if (values.length > 3) {
+                        island.setSpawnedWitherSkeleton(parseFlag(values[3]));
+                    }
+                    if (values.length > 4) {
+                        island.setSpawnedWarden(parseFlag(values[4]));
                     }
                 } catch (Exception ignored) {}
             }
@@ -54,12 +65,28 @@ public class ModStateSaver {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
                 Island island = islandManager.getIsland(player.getUUID());
                 if (island != null) {
-                    writer.println(player.getUUID().toString() + "=" + island.getBlocksMined());
+                    writer.println(
+                            player.getUUID()
+                                    + "="
+                                    + island.getBlocksMined()
+                                    + ","
+                                    + island.getOakLogsCollected()
+                                    + ","
+                                    + (island.hasSpawnedGuardian() ? 1 : 0)
+                                    + ","
+                                    + (island.hasSpawnedWitherSkeleton() ? 1 : 0)
+                                    + ","
+                                    + (island.hasSpawnedWarden() ? 1 : 0)
+                    );
                 }
             }
-            writer.flush(); // Forces writing down remaining byte blocks before context breaks
+            writer.flush();
         } catch (IOException e) {
             System.out.println("[InfiniteOneBlock] Error writing file rules: " + e.getMessage());
         }
+    }
+
+    private static boolean parseFlag(String value) {
+        return "1".equals(value.trim()) || Boolean.parseBoolean(value.trim());
     }
 }

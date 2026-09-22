@@ -46,7 +46,7 @@ public class OneBlockManager {
         int stage = getCurrentStage(island);
 
         System.out.println("Current Stage: " + stage);
-        if (stage > 2 && random.nextInt(100) < 5) {
+        if (stage > 2 && random.nextInt(100) < 3) {
             MonsterTntEntity tnt = new MonsterTntEntity(
                     world,
                     position.getX() + 0.5,
@@ -61,20 +61,20 @@ public class OneBlockManager {
             return;
         }
 
-        if (random.nextInt(100) < 20) {
-            EntityType<?> selectedMobType = getMobTypeForStage(stage, island);
+        if (random.nextInt(100) < (3 + stage)) {
+                EntityType<?> selectedMobType = getMobTypeForStage(stage, island);
 
-            if (selectedMobType != null) {
-                BlockPos spawnPos = position.above();
+                if (selectedMobType != null) {
+                    BlockPos spawnPos = position.above();
 
-                var entity = selectedMobType.spawn(world, spawnPos, EntitySpawnReason.EVENT);
-                if (entity instanceof Mob mob) {
-                    mob.setPersistenceRequired();
+                    var entity = selectedMobType.spawn(world, spawnPos, EntitySpawnReason.EVENT);
+                    if (entity instanceof Mob mob) {
+                        mob.setPersistenceRequired();
+                    }
+
+                    placeStableOneBlock(island, world, position, Blocks.GRASS_BLOCK.defaultBlockState());
+                    return;
                 }
-
-                placeStableOneBlock(island, world, position, Blocks.GRASS_BLOCK.defaultBlockState());
-                return;
-            }
         }
 
         Block nextBlock = getNextBlock(island);
@@ -153,83 +153,71 @@ public class OneBlockManager {
     public EntityType<?> getMobTypeForStage(int stage, Island island) {
         int roll = random.nextInt(100);
 
-        // ============================================================
-        // 🟥 STAGE 1: Plains
-        // ============================================================
         if (stage == 1) {
             if (roll < 3) return getMobType("villager");
-            if (roll < 8) return getMobType("zombie"); // Baby zombie handled in TNT class
+            if (roll < 8) return getMobType("zombie");
             if (roll < 45) return getMobType("chicken");
             if (roll < 75) return getMobType("pig");
             return getMobType("sheep");
         }
 
-        // ============================================================
-        // 🪨 STAGE 2: Underground (SAFE - Warden Completely Removed!)
-        // ============================================================
-        else if (stage == 2) {
+        if (stage == 2) {
             if (roll < 40) return getMobType("zombie");
             if (roll < 75) return getMobType("skeleton");
             if (roll < 95) return getMobType("creeper");
             return getMobType("cow");
         }
 
-        // ============================================================
-        // ❄️ STAGE 3: Winter
-        // ============================================================
-        else if (stage == 3) {
+        if (stage == 3) {
             if (roll < 20) return getMobType("stray");
             if (roll < 60) return getMobType("skeleton");
             return getMobType("sheep");
         }
 
-        // ============================================================
-        // 🌊 STAGE 4: Ocean (Elder Guardian SPAWNS ONLY ONCE)
-        // ============================================================
-        else if (stage == 4) {
-            // If the roll lands on the boss slot AND this island has NEVER spawned it yet
-            if (roll < 5 && island != null && !island.hasSpawnedStage4Boss()) {
-                island.setSpawnedStage4Boss(true); // Lock it forever!
-                System.out.println("[InfiniteOneBlock] BOSS WARNING: An Elder Guardian has risen from the deep!");
-                return getMobType("elder_guardian");
+        if (stage == 4) {
+            if (island != null && !island.hasSpawnedGuardian()) {
+                island.setSpawnedGuardian(true);
+                announceSuperMob(island, "A Guardian has appeared! This super mob spawns only once.");
+                return getMobType("guardian");
             }
-            // Fallback if boss already spawned or roll missed
-            if (roll < 50) return getMobType("guardian");
-            if (roll < 85) return getMobType("drowned");
-            return getMobType("chicken");
+            if (roll < 70) return getMobType("drowned");
+            return getMobType("cod");
         }
 
-        // ============================================================
-        // 🌴 STAGE 5: Jungle / Swamp
-        // ============================================================
-        else if (stage == 5) {
+        if (stage == 5) {
             if (roll < 15) return getMobType("witch");
             if (roll < 60) return getMobType("slime");
             return getMobType("cow");
         }
 
-        // ============================================================
-        // 🌋 STAGE 6: Nether (Wither Skeleton Grinding)
-        // ============================================================
-        else if (stage == 6) {
-            if (roll < 25) return getMobType("wither_skeleton");
-            if (roll < 60) return getMobType("piglin");
-            if (roll < 90) return getMobType("zombified_piglin");
+        if (stage == 6) {
+            if (island != null && !island.hasSpawnedWitherSkeleton()) {
+                island.setSpawnedWitherSkeleton(true);
+                announceSuperMob(island, "A Wither Skeleton has appeared! This super mob spawns only once.");
+                return getMobType("wither_skeleton");
+            }
+            if (roll < 40) return getMobType("piglin");
+            if (roll < 75) return getMobType("zombified_piglin");
             return getMobType("blaze");
         }
 
-        // ============================================================
-        // 👁️ STAGE 7: Stronghold & End (Ultimate Warden Boss Spawns ONLY ONCE)
-        // ============================================================
-        else {
-            // Warden shifted here as an ultimate endgame boss threat! Spawns ONLY ONCE.
-            if (roll < 4 && island != null && !island.hasSpawnedStage7Boss()) {
-                island.setSpawnedStage7Boss(true); // Lock it forever!
-                System.out.println("[InfiniteOneBlock] BOSS WARNING: The Warden has broken out of the ancient portal!");
-                return getMobType("warden");
-            }
-            if (roll < 60) return getMobType("enderman");
-            return getMobType("shulker");
+        if (island != null && !island.hasSpawnedWarden()) {
+            island.setSpawnedWarden(true);
+            announceSuperMob(island, "The Warden has broken out! This super mob spawns only once.");
+            return getMobType("warden");
+        }
+        if (roll < 70) return getMobType("enderman");
+        return getMobType("silverfish");
+    }
+
+    private void announceSuperMob(Island island, String message) {
+        var server = island.getWorld().getServer();
+        if (server == null) {
+            return;
+        }
+        var player = server.getPlayerList().getPlayer(island.getOwnerId());
+        if (player != null) {
+            player.sendSystemMessage(net.minecraft.network.chat.Component.literal(message));
         }
     }
 
@@ -239,15 +227,13 @@ public class OneBlockManager {
 
     public int getCurrentStage(Island island) {
         int blocksMined = island.getBlocksMined();
-        int stage = 7;
 
-        if (blocksMined < 50) stage = 1;
-        else if (blocksMined < 100) stage = 2;
-        else if (blocksMined < 300) stage = 3;
-        else if (blocksMined < 600) stage = 4;
-        else if (blocksMined < 1000) stage = 5;
-        else if (blocksMined < 1500) stage = 6;
-
-        return stage;
+        if (blocksMined < 80) return 1;
+        if (blocksMined < 200) return 2;
+        if (blocksMined < 400) return 3;
+        if (blocksMined < 700) return 4;
+        if (blocksMined < 1100) return 5;
+        if (blocksMined < 1600) return 6;
+        return 7;
     }
 }

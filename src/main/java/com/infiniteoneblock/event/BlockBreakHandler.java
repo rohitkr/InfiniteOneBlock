@@ -103,15 +103,20 @@ public class BlockBreakHandler {
             tool.hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
         }
 
+        int stageBefore = oneBlockManager.getCurrentStage(island);
         int blocksMined = island.incrementBlocksMined();
+        int stageAfter = oneBlockManager.getCurrentStage(island);
 
         if (brokenState.is(Blocks.OAK_LOG)) {
             int oakLogs = island.incrementOakLogsCollected();
-            player.sendSystemMessage(Component.literal("Oak Logs: " + oakLogs + "/6"));
+            player.sendSystemMessage(Component.literal("Oak Logs: " + oakLogs));
+        }
 
-            if (oakLogs == 6) {
-                player.sendSystemMessage(Component.literal("Stage 2 unlocked!"));
-                player.sendSystemMessage(Component.literal("Underground blocks are now available."));
+        if (stageAfter > stageBefore) {
+            Phase unlocked = oneBlockManager.getCurrentPhase(island);
+            player.sendSystemMessage(Component.literal("Stage " + unlocked.getId() + " unlocked: " + unlocked.getName()));
+            if (unlocked.getId() == 7) {
+                player.sendSystemMessage(Component.literal("Collect End Portal Frames and Eyes of Ender to reach the End fight."));
             }
         }
 

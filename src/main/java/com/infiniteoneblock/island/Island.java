@@ -21,14 +21,18 @@ public class Island {
     private int oakLogsCollected;
 
 
-    private boolean spawnedStage4Boss = false;
-    private boolean spawnedStage7Boss = false;
+    private boolean spawnedGuardian = false;
+    private boolean spawnedWitherSkeleton = false;
+    private boolean spawnedWarden = false;
 
-    public boolean hasSpawnedStage4Boss() { return this.spawnedStage4Boss; }
-    public void setSpawnedStage4Boss(boolean val) { this.spawnedStage4Boss = val; }
+    public boolean hasSpawnedGuardian() { return this.spawnedGuardian; }
+    public void setSpawnedGuardian(boolean val) { this.spawnedGuardian = val; }
 
-    public boolean hasSpawnedStage7Boss() { return this.spawnedStage7Boss; }
-    public void setSpawnedStage7Boss(boolean val) { this.spawnedStage7Boss = val; }
+    public boolean hasSpawnedWitherSkeleton() { return this.spawnedWitherSkeleton; }
+    public void setSpawnedWitherSkeleton(boolean val) { this.spawnedWitherSkeleton = val; }
+
+    public boolean hasSpawnedWarden() { return this.spawnedWarden; }
+    public void setSpawnedWarden(boolean val) { this.spawnedWarden = val; }
 
 
     public Island(
@@ -90,6 +94,14 @@ public class Island {
 
     public int getBlocksMined() {
         return blocksMined;
+    }
+
+    public void setBlocksMined(int blocksMined) {
+        this.blocksMined = Math.max(0, blocksMined);
+    }
+
+    public void setOakLogsCollected(int oakLogsCollected) {
+        this.oakLogsCollected = Math.max(0, oakLogsCollected);
     }
 
     public int incrementBlocksMined() {
