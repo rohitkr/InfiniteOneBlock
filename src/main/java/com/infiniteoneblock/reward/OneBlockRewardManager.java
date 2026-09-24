@@ -99,82 +99,72 @@ public class OneBlockRewardManager {
         };
     }
 
+    private int generateItems(int min, int max) {
+        return random.nextInt((max - min) + 1) + min;
+    }
+
     private ItemStack randomStageLoot(int stage) {
         // Safety check for invalid stages
-        if (stage < 1) return new ItemStack(Items.COBBLESTONE, 16);
+        if (stage < 1) return new ItemStack(Items.COBBLESTONE, generateItems(2, 8));
 
         List<ItemStack> possibleLoot = new ArrayList<>();
 
         // Stage 1 Items (Always available from Stage 1 onwards)
-        possibleLoot.add(new ItemStack(Items.OAK_SAPLING, 2));
-        possibleLoot.add(new ItemStack(Items.WHEAT_SEEDS, 4));
-        possibleLoot.add(new ItemStack(Items.BREAD, 3));
-        possibleLoot.add(new ItemStack(Items.LEATHER, random.nextInt(9) + 3));
+        possibleLoot.add(new ItemStack(Items.OAK_SAPLING, generateItems(1, 4)));
+        possibleLoot.add(new ItemStack(Items.DIRT, generateItems(2, 6)));
+        possibleLoot.add(new ItemStack(Items.WHEAT_SEEDS, generateItems(4, 8)));
+        possibleLoot.add(new ItemStack(Items.BREAD, generateItems(2, 5)));
 
         // Stage 2 Items
         if (stage >= 2) {
-            possibleLoot.add(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(4)));
-            possibleLoot.add(new ItemStack(Items.COAL, 8));
-            possibleLoot.add(new ItemStack(Items.FLINT_AND_STEEL));
-            possibleLoot.add(new ItemStack(Items.STONE_PICKAXE));
-            possibleLoot.add(new ItemStack(Items.PAPER, random.nextInt(9) + 3));
-            possibleLoot.add(new ItemStack(Items.BOOK, random.nextInt(9) + 3));
-            possibleLoot.add(new ItemStack(Items.BOOKSHELF, random.nextInt(9) + 3));
+            possibleLoot.add(new ItemStack(Items.COAL, generateItems(3, 6)));
+            possibleLoot.add(new ItemStack(Items.LEATHER, generateItems(4, 8)));
         }
 
         // Stage 3 Items
         if (stage >= 3) {
-            possibleLoot.add(new ItemStack(Items.TORCH, 8));
-            possibleLoot.add(new ItemStack(Items.SPRUCE_SAPLING, 2));
-            possibleLoot.add(new ItemStack(Items.IRON_PICKAXE));
-            possibleLoot.add(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(8)));
-            possibleLoot.add(new ItemStack(Items.GUNPOWDER, random.nextInt(9) + 3));
-            possibleLoot.add(new ItemStack(Items.ARROW, random.nextInt(50) + 14));
-            possibleLoot.add(new ItemStack(Items.STRING, random.nextInt(12) + 4));
+            possibleLoot.add(new ItemStack(Items.TORCH, generateItems(2, 6)));
+            possibleLoot.add(new ItemStack(Items.SPRUCE_SAPLING, generateItems(1, 4)));
+            possibleLoot.add(new ItemStack(Items.IRON_INGOT, generateItems(2, 6)));
+            possibleLoot.add(new ItemStack(Items.STRING, generateItems(2, 4)));
+            possibleLoot.add(new ItemStack(Items.ARROW, generateItems(4, 12)));
+            possibleLoot.add(new ItemStack(Items.GUNPOWDER, generateItems(2, 5)));
+            possibleLoot.add(new ItemStack(Items.PAPER, generateItems(2, 6)));
+            possibleLoot.add(new ItemStack(Items.BOOK, generateItems(2, 6)));
+            possibleLoot.add(new ItemStack(Items.BOOKSHELF, generateItems(2, 6)));
         }
 
         // Stage 4 Items
         if (stage >= 4) {
 //            possibleLoot.add(new ItemStack(Items.PRISMARINE_SHARD, 4));
-            possibleLoot.add(new ItemStack(Items.COOKED_COD, 4));
-            possibleLoot.add(new ItemStack(Items.HEART_OF_THE_SEA));
-            possibleLoot.add(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(10)));
-            possibleLoot.add(new ItemStack(Items.DIAMOND, 1 + random.nextInt(2))); // Added diamond here as well
+            possibleLoot.add(new ItemStack(Items.COOKED_COD, generateItems(2, 4)));
+            possibleLoot.add(new ItemStack(Items.DIAMOND, generateItems(2, 6)));
         }
 
         // Stage 5 Items
         if (stage >= 5) {
-            possibleLoot.add(new ItemStack(Items.GOLD_INGOT, 3));
-            possibleLoot.add(new ItemStack(Items.MELON_SEEDS, 2));
-            possibleLoot.add(new ItemStack(Items.LAPIS_LAZULI, 4));
-            possibleLoot.add(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(15)));
-            possibleLoot.add(new ItemStack(Items.DIAMOND, 1 + random.nextInt(3)));
+            possibleLoot.add(new ItemStack(Items.GOLD_INGOT, generateItems(2, 6)));
+            possibleLoot.add(new ItemStack(Items.LAPIS_LAZULI, generateItems(4, 8)));
         }
 
         // Stage 6 Items
         if (stage >= 6) {
-            possibleLoot.add(new ItemStack(Items.NETHER_WART, 2));
-            possibleLoot.add(new ItemStack(Items.BLAZE_ROD, 2));
-            possibleLoot.add(new ItemStack(Items.ENDER_PEARL, 2));
-            possibleLoot.add(new ItemStack(Items.GLOWSTONE_DUST, 4));
-            possibleLoot.add(new ItemStack(Items.NETHERITE_SCRAP, 4 + random.nextInt(15)));
-            possibleLoot.add(new ItemStack(Items.IRON_INGOT, 1 + random.nextInt(20)));
-            possibleLoot.add(new ItemStack(Items.DIAMOND, 1 + random.nextInt(8)));
+            possibleLoot.add(new ItemStack(Items.NETHER_WART, generateItems(2, 6)));
+            possibleLoot.add(new ItemStack(Items.BLAZE_ROD, generateItems(2, 4)));
+            possibleLoot.add(new ItemStack(Items.ENDER_PEARL, generateItems(2, 4)));
+            possibleLoot.add(new ItemStack(Items.GLOWSTONE_DUST, generateItems(4, 6)));
+            possibleLoot.add(new ItemStack(Items.NETHERITE_SCRAP, generateItems(4, 8)));
         }
 
         // Stage 7 Items
         if (stage >= 7) {
-            possibleLoot.add(new ItemStack(Items.ENDER_EYE, 2));
-            possibleLoot.add(new ItemStack(Items.ENDER_PEARL, 4));
-            possibleLoot.add(new ItemStack(Items.CHORUS_FRUIT, 8));
-            possibleLoot.add(new ItemStack(Items.SHULKER_SHELL, 2));
-//            possibleLoot.add(new ItemStack(Items.ELYTRA));
-            possibleLoot.add(new ItemStack(Items.END_PORTAL_FRAME, 1 + random.nextInt(8)));
-            possibleLoot.add(new ItemStack(Items.OBSIDIAN, 1 + random.nextInt(8)));
-            possibleLoot.add(new ItemStack(Items.GUNPOWDER, random.nextInt(9) + 3));
-            possibleLoot.add(new ItemStack(Items.DIAMOND, 1 + random.nextInt(8)));
-            possibleLoot.add(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 1 + random.nextInt(4)));
-            possibleLoot.add(new ItemStack(Items.NETHERITE_SCRAP, 4 + random.nextInt(15)));
+            possibleLoot.add(new ItemStack(Items.ENDER_EYE, generateItems(2, 6)));
+            // possibleLoot.add(new ItemStack(Items.SHULKER_SHELL, 2));
+            // possibleLoot.add(new ItemStack(Items.ELYTRA));
+            possibleLoot.add(new ItemStack(Items.END_PORTAL_FRAME, generateItems(2, 6)));
+            possibleLoot.add(new ItemStack(Items.OBSIDIAN, generateItems(2, 6)));
+            possibleLoot.add(new ItemStack(Items.GUNPOWDER, generateItems(2, 6)));
+            possibleLoot.add(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, generateItems(2, 4)));
         }
 
         // Pick a random item out of the entire accumulated pool
