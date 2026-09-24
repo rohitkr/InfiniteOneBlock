@@ -37,7 +37,17 @@ public class OneBlockManager {
 
     public Block getNextBlock(Island island) {
         int stage = getCurrentStage(island);
-        return blockGenerator.generateNextBlock(stage);
+        Block block = blockGenerator.generateNextBlock(stage, island);
+
+        // Prerequisite check for Stage 2 Iron Ore
+        if (stage == 2 && block == Blocks.IRON_ORE) {
+            if (island.getCobblestoneCollected() < 15) {
+                // Fallback to Cobblestone if prerequisites aren't met
+                return Blocks.COBBLESTONE;
+            }
+        }
+
+        return block;
     }
 
     public void regenerate(Island island) {
@@ -155,63 +165,81 @@ public class OneBlockManager {
     }
 
     public EntityType<?> getMobTypeForStage(int stage, Island island, boolean hostileOnly) {
-        int roll = random.nextInt(100);
-
-        if (stage == 1) {
-            if (!hostileOnly && roll < 3) return getMobType("villager");
-            if (roll < 8 || hostileOnly) return getMobType("zombie");
-            if (roll < 45) return getMobType("chicken");
-            if (roll < 75) return getMobType("pig");
-            return getMobType("sheep");
+        // --- 1. CRITICAL RULES: SUPER MOBS (Do Not Change) ---
+        if (stage == 4 && island != null && !island.hasSpawnedGuardian()) {
+            island.setSpawnedGuardian(true);
+            announceSuperMob(island, "A Guardian has appeared! This super mob spawns only once.");
+            return getMobType("elder_guardian");
         }
-
-        if (stage == 2) {
-            if (roll < 40) return getMobType("zombie");
-            if (roll < 75) return getMobType("skeleton");
-            if (roll < 95 || hostileOnly) return getMobType("creeper");
-            return hostileOnly ? getMobType("zombie") : getMobType("cow");
+        if (stage == 6 && island != null && !island.hasSpawnedWitherSkeleton()) {
+            island.setSpawnedWitherSkeleton(true);
+            announceSuperMob(island, "A Wither Skeleton has appeared! This super mob spawns only once.");
+            return getMobType("wither");
         }
-
-        if (stage == 3) {
-            if (roll < 20) return getMobType("stray");
-            if (roll < 60 || hostileOnly) return getMobType("skeleton");
-            return hostileOnly ? getMobType("stray") : getMobType("sheep");
-        }
-
-        if (stage == 4) {
-            if (island != null && !island.hasSpawnedGuardian()) {
-                island.setSpawnedGuardian(true);
-                announceSuperMob(island, "A Guardian has appeared! This super mob spawns only once.");
-                return getMobType("guardian");
-            }
-            if (roll < 70 || hostileOnly) return getMobType("drowned");
-            return getMobType("cod");
-        }
-
-        if (stage == 5) {
-            if (roll < 15) return getMobType("witch");
-            if (roll < 60 || hostileOnly) return getMobType("slime");
-            return hostileOnly ? getMobType("witch") : getMobType("cow");
-        }
-
-        if (stage == 6) {
-            if (island != null && !island.hasSpawnedWitherSkeleton()) {
-                island.setSpawnedWitherSkeleton(true);
-                announceSuperMob(island, "A Wither Skeleton has appeared! This super mob spawns only once.");
-                return getMobType("wither_skeleton");
-            }
-            if (roll < 40) return getMobType("piglin");
-            if (roll < 75) return getMobType("zombified_piglin");
-            return getMobType("blaze");
-        }
-
-        if (island != null && !island.hasSpawnedWarden()) {
+        if (stage >= 7 && island != null && !island.hasSpawnedWarden()) {
             island.setSpawnedWarden(true);
             announceSuperMob(island, "The Warden has broken out! This super mob spawns only once.");
             return getMobType("warden");
         }
-        if (roll < 70) return getMobType("enderman");
-        return getMobType("silverfish");
+
+        // --- 2. DEFINE THE SCALED ANIMAL PROBABILITIES PER STAGE ---
+        int animalChance = 0; // Out of 100%
+
+        if (!hostileOnly) {
+            animalChance = switch (stage) {
+                case 1  -> 85; // Lower stage: Heavily weights animals (85% animal, 15% monster)
+                case 2  -> 60; // 60% animal
+                case 3  -> 50; // 50% animal
+                case 4  -> 40; // 40% animal
+                case 5  -> 35; // 35% animal
+                case 6  -> 30; // 30% animal
+                default -> 15; // Upper stage: Monster heavy (15% animal, 90% monster)
+            };
+        }
+
+        // --- 3. EXECUTE THE ACCESSIBLE RANDOM ROLL ---
+        int poolRoll = random.nextInt(100);
+        int subRoll = random.nextInt(100);
+
+        // Roll for an Animal (Guaranteed baseline scaling)
+        if (poolRoll < animalChance) {
+            if (subRoll < 25) return getMobType("chicken");
+            if (subRoll < 50) return getMobType("pig");
+            if (subRoll < 75) return getMobType("sheep");
+            return getMobType("cow");
+        }
+
+        // Roll for a Basic Monster (Guaranteed availability across ALL stages)
+        else {
+            // Stage-based theme optimization (e.g., adding nether/end themes into upper stages)
+            if (stage >= 6) {
+                if (subRoll < 10) return getMobType("piglin");
+                if (subRoll < 30) return getMobType("zombified_piglin");
+                if (subRoll < 70) return getMobType("wither_skeleton");
+                if (subRoll < 80) return getMobType("phantom");
+                if (subRoll < 90) return getMobType("ghast");
+                // if (subRoll < 85) return getMobType("blaze");
+                return getMobType("enderman");
+            }
+            if (stage == 4) {
+                if (subRoll < 30) return getMobType("zombie");
+                if (subRoll < 70) return getMobType("skeleton");
+                if (subRoll < 80) return getMobType("creeper");
+                return getMobType("zombie");
+            }
+            if (stage == 3) {
+                if (subRoll < 40) return getMobType("stray");
+                if (subRoll < 75) return getMobType("skeleton");
+                return getMobType("creeper");
+            }
+
+            // Universal basic monster fallback list for all stages
+            if (subRoll < 25) return getMobType("zombie");
+            if (subRoll < 45) return getMobType("skeleton");
+            if (subRoll < 60) return getMobType("creeper");
+            if (subRoll < 90) return getMobType("spider");
+            return getMobType("enderman");
+        }
     }
 
     private void announceSuperMob(Island island, String message) {

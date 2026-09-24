@@ -17,7 +17,8 @@ public class BlockGenerator {
     }
 
     public Block generateNextBlock(
-            int stage
+            int stage,
+            com.infiniteoneblock.island.Island island
     ) {
 
         Phase phase =
@@ -27,7 +28,12 @@ public class BlockGenerator {
 
         return phase
                 .getBlockPool()
-                .getRandomBlock();
+                .getRandomBlock(block -> {
+                    if (block == net.minecraft.world.level.block.Blocks.IRON_ORE) {
+                        return island.getCobblestoneCollected() >= 15;
+                    }
+                    return true;
+                });
     }
 
     public Phase getCurrentPhase(

@@ -70,24 +70,24 @@ public class BlockBreakHandler {
         ServerLevel world = island.getWorld();
 
         // 1. Force Item Drop Capture into Inventory
+        ItemStack tool = player.getMainHandItem();
+//        boolean canHarvest = brokenState.canHarvestBlock(world, pos, player);
+        boolean canHarvest = true;
+
         LootParams.Builder lootBuilder = new LootParams.Builder(world)
                 .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
-                .withParameter(LootContextParams.TOOL, player.getMainHandItem())
+                .withParameter(LootContextParams.TOOL, tool)
                 .withOptionalParameter(LootContextParams.THIS_ENTITY, player)
                 .withOptionalParameter(LootContextParams.BLOCK_ENTITY, world.getBlockEntity(pos));
 
         List<ItemStack> drops = brokenState.getDrops(lootBuilder);
         for (ItemStack drop : drops) {
-//            if (!player.getInventory().add(drop)) {
-//                Block.popResource(world, player.blockPosition().above(), drop);
-//            }
             /*
              * ✅ FIXED: VANILLA PHYSICS RESTORATION
-             * Instead of injecting the drop directly into player inventory slots,
-             * we spawn the item resource entity precisely 1.2 blocks ABOVE the broken coordinate.
-             * This makes the item pop out into the air visually, perfectly matching vanilla behaviors!
+             * We only spawn the item if the player can actually harvest the block
+             * with their current tool, respecting vanilla mining rules.
              */
-            if (!drop.isEmpty()) {
+            if (!drop.isEmpty() && canHarvest) {
                 BlockPos airSpawnPos = pos.above();
                 Block.popResource(world, airSpawnPos, drop);
             }
@@ -98,7 +98,6 @@ public class BlockBreakHandler {
          * Since we cancel vanilla execution, manually inflict 1 point of block-break durability damage
          * onto the item held in the player's main hand, respecting unbreaking enchantments natively.
          */
-        ItemStack tool = player.getMainHandItem();
         if (!tool.isEmpty() && player.gameMode.getGameModeForPlayer().isSurvival()) {
             tool.hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
         }
@@ -110,6 +109,11 @@ public class BlockBreakHandler {
         if (brokenState.is(Blocks.OAK_LOG)) {
             int oakLogs = island.incrementOakLogsCollected();
             player.sendSystemMessage(Component.literal("Oak Logs: " + oakLogs));
+        }
+
+        if (brokenState.is(Blocks.COBBLESTONE)) {
+            int cobblestone = island.incrementCobblestoneCollected();
+            player.sendSystemMessage(Component.literal("Cobblestone: " + cobblestone));
         }
 
         if (stageAfter > stageBefore) {

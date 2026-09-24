@@ -72,6 +72,9 @@ public class ModStateSaver {
                     if (values.length > 5) {
                         island.setGrantedEssentialsMask(Integer.parseInt(values[5].trim()));
                     }
+                    if (values.length > 6) {
+                        island.setCobblestoneCollected(Integer.parseInt(values[6].trim()));
+                    }
                 } catch (Exception ignored) {
                 }
             }
@@ -114,7 +117,9 @@ public class ModStateSaver {
                 + ","
                 + (island.hasSpawnedWarden() ? 1 : 0)
                 + ","
-                + island.getGrantedEssentialsMask();
+                + island.getGrantedEssentialsMask()
+                + ","
+                + island.getCobblestoneCollected();
     }
 
     private static File progressFile(MinecraftServer server) {

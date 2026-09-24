@@ -19,6 +19,7 @@ public class Island {
 
     private int blocksMined;
     private int oakLogsCollected;
+    private int cobblestoneCollected;
 
 
     private boolean spawnedGuardian = false;
@@ -121,6 +122,10 @@ public class Island {
         this.oakLogsCollected = Math.max(0, oakLogsCollected);
     }
 
+    public void setCobblestoneCollected(int cobblestoneCollected) {
+        this.cobblestoneCollected = Math.max(0, cobblestoneCollected);
+    }
+
     public int incrementBlocksMined() {
         blocksMined++;
         return blocksMined;
@@ -133,6 +138,15 @@ public class Island {
     public int incrementOakLogsCollected() {
         oakLogsCollected++;
         return oakLogsCollected;
+    }
+
+    public int getCobblestoneCollected() {
+        return cobblestoneCollected;
+    }
+
+    public int incrementCobblestoneCollected() {
+        cobblestoneCollected++;
+        return cobblestoneCollected;
     }
 
     public boolean hasUnlockedStage2() {

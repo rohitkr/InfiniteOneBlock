@@ -65,15 +65,15 @@ public class MonsterTntEntity extends PrimedTnt {
                 java.util.Random rand = new java.util.Random();
                 int count = 0;
                 int limit = 1;
-
                 if (selectedMobType.equals(manager.getMobType("zombie"))
                         || selectedMobType.equals(manager.getMobType("skeleton"))
-                        || selectedMobType.equals(manager.getMobType("drowned"))
                         || selectedMobType.equals(manager.getMobType("piglin"))
                         || selectedMobType.equals(manager.getMobType("zombified_piglin"))) {
-                    limit = 3 + rand.nextInt(3);
+                } else {
+                    selectedMobType = manager.getMobType("zombie");
                 }
 
+                limit = 2 + rand.nextInt(4);
                 while (count < limit) {
                     double offsetX = (rand.nextDouble() - 0.5) * 1.5;
                     double offsetZ = (rand.nextDouble() - 0.5) * 1.5;
@@ -90,6 +90,7 @@ public class MonsterTntEntity extends PrimedTnt {
                     count++;
                 }
             }
+
 
             this.discard();
             return;
