@@ -16,10 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.storage.loot.LootParams;
-import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
-import net.minecraft.world.phys.Vec3;
-import net.minecraft.world.entity.EquipmentSlot; // Added for tool damage tracking
+import net.minecraft.stats.Stats;
 
 import java.util.List;
 
@@ -69,37 +66,35 @@ public class BlockBreakHandler {
     ) {
         ServerLevel world = island.getWorld();
 
-        // 1. Force Item Drop Capture into Inventory
+        // 1. Drops follow vanilla harvest rules
         ItemStack tool = player.getMainHandItem();
-//        boolean canHarvest = brokenState.canHarvestBlock(world, pos, player);
-        boolean canHarvest = true;
-
-        LootParams.Builder lootBuilder = new LootParams.Builder(world)
-                .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
-                .withParameter(LootContextParams.TOOL, tool)
-                .withOptionalParameter(LootContextParams.THIS_ENTITY, player)
-                .withOptionalParameter(LootContextParams.BLOCK_ENTITY, world.getBlockEntity(pos));
-
-        List<ItemStack> drops = brokenState.getDrops(lootBuilder);
-        for (ItemStack drop : drops) {
-            /*
-             * ✅ FIXED: VANILLA PHYSICS RESTORATION
-             * We only spawn the item if the player can actually harvest the block
-             * with their current tool, respecting vanilla mining rules.
-             */
-            if (!drop.isEmpty() && canHarvest) {
-                BlockPos airSpawnPos = pos.above();
-                Block.popResource(world, airSpawnPos, drop);
-            }
-        }
+        boolean creative = player.isCreative();
 
         /*
-         * FIX BUG: TOOL DURABILITY LOSS
-         * Since we cancel vanilla execution, manually inflict 1 point of block-break durability damage
-         * onto the item held in the player's main hand, respecting unbreaking enchantments natively.
+         * Same check vanilla uses in ServerPlayerGameMode: blocks such as stone, ores,
+         * obsidian or snow only drop when mined with a tool of the right type and tier.
+         * Dirt, logs, sand etc. still drop by hand.
          */
-        if (!tool.isEmpty() && player.gameMode.getGameModeForPlayer().isSurvival()) {
-            tool.hurtAndBreak(1, player, EquipmentSlot.MAINHAND);
+        boolean canHarvest = !creative && player.hasCorrectToolForDrops(brokenState);
+
+        if (canHarvest) {
+            // Vanilla loot table with the held tool, so Fortune and Silk Touch apply too
+            List<ItemStack> drops = Block.getDrops(brokenState, world, pos, world.getBlockEntity(pos), player, tool);
+            for (ItemStack drop : drops) {
+                if (!drop.isEmpty()) {
+                    Block.popResource(world, pos.above(), drop);
+                }
+            }
+
+            // Ore experience and silverfish from infested blocks
+            brokenState.spawnAfterBreak(world, pos, tool, true);
+        }
+
+        if (!creative) {
+            // Tool durability, stats and hunger exactly as a vanilla block break
+            tool.mineBlock(world, brokenState, pos, player);
+            player.awardStat(Stats.BLOCK_MINED.get(brokenState.getBlock()));
+            player.causeFoodExhaustion(0.005F);
         }
 
         int stageBefore = oneBlockManager.getCurrentStage(island);
@@ -111,7 +106,8 @@ public class BlockBreakHandler {
             player.sendSystemMessage(Component.literal("Oak Logs: " + oakLogs));
         }
 
-        if (brokenState.is(Blocks.COBBLESTONE)) {
+        // Only counts when cobblestone actually dropped (needs a pickaxe); this gates iron ore
+        if (canHarvest && (brokenState.is(Blocks.COBBLESTONE) || brokenState.is(Blocks.STONE))) {
             int cobblestone = island.incrementCobblestoneCollected();
             player.sendSystemMessage(Component.literal("Cobblestone: " + cobblestone));
         }
@@ -120,7 +116,10 @@ public class BlockBreakHandler {
             Phase unlocked = oneBlockManager.getCurrentPhase(island);
             player.sendSystemMessage(Component.literal("Stage " + unlocked.getId() + " unlocked: " + unlocked.getName()));
             if (unlocked.getId() == 7) {
-                player.sendSystemMessage(Component.literal("Collect End Portal Frames and Eyes of Ender to reach the End fight."));
+                player.sendSystemMessage(Component.literal("Supply chests now hold End Portal Frames. Collect 12, and craft Eyes of Ender from Blaze Powder and Ender Pearls."));
+            }
+            if (unlocked.getId() == 8) {
+                player.sendSystemMessage(Component.literal("Final stage! Build the End Portal and defeat the Ender Dragon."));
             }
         }
 

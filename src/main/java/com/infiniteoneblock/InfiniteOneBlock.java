@@ -128,6 +128,11 @@ public class InfiniteOneBlock implements ModInitializer {
 
 		blockPlaceHandler.register();
 
+		new com.infiniteoneblock.event.DarknessMobSpawner(
+				islandManager,
+				oneBlockManager
+		).register();
+
 		net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_UNLOAD.register((entity, world) -> {
 			// When a primed Creeper or TNT entity vanishes/explodes from the world layer
 			if (entity instanceof net.minecraft.world.entity.monster.Creeper || entity instanceof net.minecraft.world.entity.item.PrimedTnt) {
@@ -183,6 +188,10 @@ public class InfiniteOneBlock implements ModInitializer {
 
 		System.out.println(
 				"       Normal block placement enabled!"
+		);
+
+		System.out.println(
+				"       Darkness mob spawning enabled!"
 		);
 
 		System.out.println(

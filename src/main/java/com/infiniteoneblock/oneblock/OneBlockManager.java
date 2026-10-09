@@ -190,56 +190,96 @@ public class OneBlockManager {
                 case 1  -> 85; // Lower stage: Heavily weights animals (85% animal, 15% monster)
                 case 2  -> 60; // 60% animal
                 case 3  -> 50; // 50% animal
-                case 4  -> 40; // 40% animal
-                case 5  -> 35; // 35% animal
-                case 6  -> 30; // 30% animal
-                default -> 15; // Upper stage: Monster heavy (15% animal, 90% monster)
+                case 4  -> 45; // 45% animal
+                case 5  -> 40; // 40% animal
+                case 6  -> 20; // Nether: mostly monsters
+                case 7  -> 20; // Stronghold: mostly monsters
+                default -> 10; // The End: monster heavy
             };
         }
 
         // --- 3. EXECUTE THE ACCESSIBLE RANDOM ROLL ---
-        int poolRoll = random.nextInt(100);
-        int subRoll = random.nextInt(100);
-
-        // Roll for an Animal (Guaranteed baseline scaling)
-        if (poolRoll < animalChance) {
+        if (random.nextInt(100) < animalChance) {
+            int subRoll = random.nextInt(100);
             if (subRoll < 25) return getMobType("chicken");
             if (subRoll < 50) return getMobType("pig");
             if (subRoll < 75) return getMobType("sheep");
             return getMobType("cow");
         }
 
-        // Roll for a Basic Monster (Guaranteed availability across ALL stages)
-        else {
-            // Stage-based theme optimization (e.g., adding nether/end themes into upper stages)
-            if (stage >= 6) {
-                if (subRoll < 10) return getMobType("piglin");
-                if (subRoll < 30) return getMobType("zombified_piglin");
-                if (subRoll < 70) return getMobType("wither_skeleton");
-                if (subRoll < 80) return getMobType("phantom");
-                if (subRoll < 90) return getMobType("ghast");
-                // if (subRoll < 85) return getMobType("blaze");
-                return getMobType("enderman");
-            }
-            if (stage == 4) {
-                if (subRoll < 30) return getMobType("zombie");
-                if (subRoll < 70) return getMobType("skeleton");
-                if (subRoll < 80) return getMobType("creeper");
-                return getMobType("zombie");
-            }
-            if (stage == 3) {
-                if (subRoll < 40) return getMobType("stray");
-                if (subRoll < 75) return getMobType("skeleton");
-                return getMobType("creeper");
-            }
+        return getHostileMobForStage(stage);
+    }
 
-            // Universal basic monster fallback list for all stages
-            if (subRoll < 25) return getMobType("zombie");
-            if (subRoll < 45) return getMobType("skeleton");
-            if (subRoll < 60) return getMobType("creeper");
-            if (subRoll < 90) return getMobType("spider");
-            return getMobType("enderman");
-        }
+    /**
+     * Stage-themed hostile mob. Never triggers a super mob, so it is safe to call
+     * from the Monster TNT and the darkness spawner.
+     *
+     * Progression drops to keep in mind:
+     *  - Spiders (string) from Stage 1, Skeletons (bones/arrows) from Stage 2.
+     *  - Endermen (ender pearls) from Stage 5, common in Stages 7 and 8.
+     *  - Blazes (blaze rods) from Stage 6 onward.
+     */
+    public EntityType<?> getHostileMobForStage(int stage) {
+        int roll = random.nextInt(100);
+
+        return switch (stage) {
+            // Plains: weak mobs only, the player has no armour yet
+            case 1 -> roll < 60 ? getMobType("zombie") : getMobType("spider");
+            case 2 -> {
+                if (roll < 35) yield getMobType("zombie");
+                if (roll < 60) yield getMobType("skeleton");
+                if (roll < 85) yield getMobType("spider");
+                yield getMobType("creeper");
+            }
+            case 3 -> {
+                if (roll < 35) yield getMobType("stray");
+                if (roll < 60) yield getMobType("skeleton");
+                if (roll < 80) yield getMobType("zombie");
+                if (roll < 90) yield getMobType("spider");
+                yield getMobType("creeper");
+            }
+            case 4 -> {
+                if (roll < 35) yield getMobType("drowned");
+                if (roll < 60) yield getMobType("zombie");
+                if (roll < 80) yield getMobType("skeleton");
+                if (roll < 90) yield getMobType("spider");
+                yield getMobType("creeper");
+            }
+            case 5 -> {
+                if (roll < 25) yield getMobType("zombie");
+                if (roll < 45) yield getMobType("skeleton");
+                if (roll < 60) yield getMobType("spider");
+                if (roll < 72) yield getMobType("creeper");
+                if (roll < 82) yield getMobType("witch");
+                if (roll < 90) yield getMobType("slime");
+                yield getMobType("enderman");
+            }
+            case 6 -> {
+                if (roll < 30) yield getMobType("blaze");
+                if (roll < 55) yield getMobType("zombified_piglin");
+                if (roll < 70) yield getMobType("wither_skeleton");
+                if (roll < 82) yield getMobType("piglin");
+                if (roll < 92) yield getMobType("magma_cube");
+                if (roll < 96) yield getMobType("enderman");
+                yield getMobType("ghast");
+            }
+            case 7 -> {
+                if (roll < 35) yield getMobType("enderman");
+                if (roll < 50) yield getMobType("silverfish");
+                if (roll < 65) yield getMobType("skeleton");
+                if (roll < 78) yield getMobType("zombie");
+                if (roll < 88) yield getMobType("blaze");
+                if (roll < 95) yield getMobType("creeper");
+                yield getMobType("witch");
+            }
+            default -> {
+                if (roll < 60) yield getMobType("enderman");
+                if (roll < 70) yield getMobType("endermite");
+                if (roll < 82) yield getMobType("skeleton");
+                if (roll < 92) yield getMobType("blaze");
+                yield getMobType("creeper");
+            }
+        };
     }
 
     private void announceSuperMob(Island island, String message) {
@@ -260,12 +300,13 @@ public class OneBlockManager {
     public int getCurrentStage(Island island) {
         int blocksMined = island.getBlocksMined();
 
-        if (blocksMined < 80) return 1;
-        if (blocksMined < 200) return 2;
-        if (blocksMined < 400) return 3;
+        if (blocksMined < 100) return 1;
+        if (blocksMined < 250) return 2;
+        if (blocksMined < 450) return 3;
         if (blocksMined < 700) return 4;
-        if (blocksMined < 1100) return 5;
-        if (blocksMined < 1600) return 6;
-        return 7;
+        if (blocksMined < 1000) return 5;
+        if (blocksMined < 1400) return 6;
+        if (blocksMined < 1900) return 7;
+        return 8;
     }
 }

@@ -29,7 +29,7 @@ public class OneBlockRewardManager {
             int stage,
             Island island
     ) {
-        double SUPPLY_CHEST_CHANCE = stage >= 2 ? 0.2 : 0.08;
+        double SUPPLY_CHEST_CHANCE = stage >= 2 ? 0.12 : 0.08;
         double EXTRA_BASIC_CHANCE = 0.35;
 
         if (random.nextDouble() >= SUPPLY_CHEST_CHANCE) {
@@ -49,18 +49,18 @@ public class OneBlockRewardManager {
 
         List<ItemStack> loot = new ArrayList<>();
         addMissingEssentials(loot, island, stage);
-        loot.add(randomStageLoot(stage));
+        addEndPortalFrame(loot, island, stage, player);
 
-        if (random.nextDouble() < EXTRA_BASIC_CHANCE) {
-            loot.add(randomBasicLoot());
-        }
+        loot.add(randomStageLoot(stage));
+        loot.add(randomStageLoot(stage));
 
         if (random.nextBoolean()) {
             loot.add(randomStageLoot(stage));
         }
 
-        loot.add(randomStageLoot(stage));
-        loot.add(randomStageLoot(stage));
+        if (random.nextDouble() < EXTRA_BASIC_CHANCE) {
+            loot.add(randomBasicLoot());
+        }
 
         int slot = 0;
         for (ItemStack stack : loot) {
@@ -88,14 +88,35 @@ public class OneBlockRewardManager {
         }
     }
 
+    /*
+     * End Portal Frames cannot be mined from the OneBlock. From Stage 7 each supply
+     * chest has a chance to contain a single frame until the player has the 12 needed
+     * for a portal. That spreads the portal over roughly the second half of Stage 7.
+     */
+    private static final int END_PORTAL_FRAMES_NEEDED = 12;
+    private static final double END_PORTAL_FRAME_CHANCE = 0.35;
+
+    private void addEndPortalFrame(List<ItemStack> loot, Island island, int stage, ServerPlayer player) {
+        if (stage < 7 || island.getEndPortalFramesGranted() >= END_PORTAL_FRAMES_NEEDED) {
+            return;
+        }
+        if (random.nextDouble() >= END_PORTAL_FRAME_CHANCE) {
+            return;
+        }
+
+        loot.add(new ItemStack(Items.END_PORTAL_FRAME));
+        island.setEndPortalFramesGranted(island.getEndPortalFramesGranted() + 1);
+        player.sendSystemMessage(Component.literal(
+                "End Portal Frame found! (" + island.getEndPortalFramesGranted() + "/" + END_PORTAL_FRAMES_NEEDED + ")"));
+    }
+
     private ItemStack randomBasicLoot() {
-        return switch (random.nextInt(6)) {
-            case 0 -> new ItemStack(Items.WATER_BUCKET);
-            case 1 -> new ItemStack(Items.LAVA_BUCKET);
-            case 2 -> new ItemStack(Items.OAK_SAPLING, 2);
-            case 3 -> new ItemStack(Items.BREAD, 4);
-            case 4 -> new ItemStack(Items.TORCH, 8);
-            default -> new ItemStack(Items.COBBLESTONE, 16);
+        return switch (random.nextInt(5)) {
+            case 0 -> new ItemStack(Items.OAK_SAPLING, 2);
+            case 1 -> new ItemStack(Items.BREAD, 3);
+            case 2 -> new ItemStack(Items.TORCH, 8);
+            case 3 -> new ItemStack(Items.APPLE, 2);
+            default -> new ItemStack(Items.BONE_MEAL, 4);
         };
     }
 
@@ -103,74 +124,107 @@ public class OneBlockRewardManager {
         return random.nextInt((max - min) + 1) + min;
     }
 
+    /*
+     * ============================================================
+     * STAGE LOOT TABLE
+     *
+     * minStage .. maxStage, weight, item, min..max count.
+     *
+     * Design rules:
+     *  - Chests top up what the OneBlock and mobs already give; they never
+     *    replace the main progression path.
+     *  - Iron ingots from Stage 3, diamonds only as single rare drops from
+     *    Stage 4, never in bulk.
+     *  - Blaze rods and ender pearls only appear from Stage 6 as rare drops.
+     *    Most of them must come from Blazes and Endermen.
+     *  - Eyes of Ender are never given directly: craft them.
+     * ============================================================
+     */
+    private record LootEntry(int minStage, int maxStage, int weight, net.minecraft.world.item.Item item, int min, int max) {
+    }
+
+    private static final int ANY = Integer.MAX_VALUE;
+
+    private static final List<LootEntry> STAGE_LOOT = List.of(
+            // Stage 1 — Plains: food and farming
+            new LootEntry(1, ANY, 6, Items.OAK_SAPLING, 1, 2),
+            new LootEntry(1, ANY, 6, Items.WHEAT_SEEDS, 2, 5),
+            new LootEntry(1, ANY, 5, Items.BREAD, 1, 3),
+            new LootEntry(1, 4, 4, Items.APPLE, 1, 3),
+            new LootEntry(1, 3, 3, Items.SUGAR_CANE, 1, 3),
+            new LootEntry(1, 2, 3, Items.BONE_MEAL, 2, 4),
+
+            // Stage 2 — Underground: light and basic tools materials
+            new LootEntry(2, ANY, 6, Items.COAL, 2, 5),
+            new LootEntry(2, ANY, 5, Items.TORCH, 4, 8),
+            new LootEntry(2, 5, 3, Items.LEATHER, 1, 3),
+            new LootEntry(2, 5, 3, Items.STRING, 1, 3),
+            new LootEntry(2, 3, 3, Items.COBBLESTONE, 4, 12),
+
+            // Stage 3 — Winter: iron age
+            new LootEntry(3, ANY, 5, Items.IRON_INGOT, 1, 3),
+            new LootEntry(3, ANY, 4, Items.ARROW, 4, 10),
+            new LootEntry(3, ANY, 3, Items.GUNPOWDER, 1, 3),
+            new LootEntry(3, 6, 3, Items.PAPER, 2, 4),
+            new LootEntry(3, 6, 2, Items.BOOK, 1, 2),
+            new LootEntry(3, 4, 3, Items.SPRUCE_SAPLING, 1, 2),
+            new LootEntry(3, 5, 2, Items.PUMPKIN_SEEDS, 1, 2),
+            new LootEntry(3, 5, 2, Items.MELON_SEEDS, 1, 2),
+
+            // Stage 4 — Ocean: gold and the first rare diamond
+            new LootEntry(4, ANY, 4, Items.COOKED_COD, 2, 4),
+            new LootEntry(4, ANY, 3, Items.GOLD_INGOT, 1, 3),
+            new LootEntry(4, ANY, 1, Items.DIAMOND, 1, 1),
+
+            // Stage 5 — Jungle / Swamp: enchanting materials
+            new LootEntry(5, ANY, 4, Items.LAPIS_LAZULI, 3, 6),
+            new LootEntry(5, ANY, 2, Items.EXPERIENCE_BOTTLE, 2, 5),
+            new LootEntry(5, ANY, 2, Items.OBSIDIAN, 1, 2),
+            new LootEntry(5, ANY, 2, Items.COCOA_BEANS, 1, 3),
+
+            // Stage 6 — Nether: brewing, bartering gold, rare rods and pearls
+            new LootEntry(6, ANY, 4, Items.NETHER_WART, 1, 3),
+            new LootEntry(6, ANY, 3, Items.GLOWSTONE_DUST, 2, 5),
+            new LootEntry(6, ANY, 4, Items.GOLD_INGOT, 3, 6),
+            new LootEntry(6, ANY, 2, Items.BLAZE_ROD, 1, 1),
+            new LootEntry(6, ANY, 2, Items.ENDER_PEARL, 1, 1),
+            new LootEntry(6, ANY, 1, Items.NETHERITE_SCRAP, 1, 1),
+
+            // Stage 7 — Stronghold: preparing for the End
+            new LootEntry(7, ANY, 3, Items.ENDER_PEARL, 1, 2),
+            new LootEntry(7, ANY, 2, Items.BLAZE_ROD, 1, 2),
+            new LootEntry(7, ANY, 3, Items.ARROW, 8, 16),
+            new LootEntry(7, ANY, 2, Items.GOLDEN_APPLE, 1, 1),
+            new LootEntry(7, ANY, 2, Items.IRON_INGOT, 2, 5),
+
+            // Stage 8 — The End: dragon fight supplies
+            new LootEntry(8, ANY, 3, Items.GOLDEN_APPLE, 1, 2),
+            new LootEntry(8, ANY, 2, Items.DIAMOND, 1, 2),
+            new LootEntry(8, ANY, 2, Items.OBSIDIAN, 2, 4),
+            new LootEntry(8, ANY, 1, Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, 1, 1)
+    );
+
     private ItemStack randomStageLoot(int stage) {
-        // Safety check for invalid stages
-        if (stage < 1) return new ItemStack(Items.COBBLESTONE, generateItems(2, 8));
+        int clampedStage = Math.max(1, stage);
 
-        List<ItemStack> possibleLoot = new ArrayList<>();
-
-        // Stage 1 Items (Always available from Stage 1 onwards)
-        possibleLoot.add(new ItemStack(Items.OAK_SAPLING, generateItems(1, 4)));
-        possibleLoot.add(new ItemStack(Items.DIRT, generateItems(2, 6)));
-        possibleLoot.add(new ItemStack(Items.WHEAT_SEEDS, generateItems(4, 8)));
-        possibleLoot.add(new ItemStack(Items.BREAD, generateItems(2, 5)));
-
-        // Stage 2 Items
-        if (stage >= 2) {
-            possibleLoot.add(new ItemStack(Items.COAL, generateItems(3, 6)));
-            possibleLoot.add(new ItemStack(Items.LEATHER, generateItems(4, 8)));
+        int totalWeight = 0;
+        for (LootEntry entry : STAGE_LOOT) {
+            if (clampedStage >= entry.minStage() && clampedStage <= entry.maxStage()) {
+                totalWeight += entry.weight();
+            }
         }
 
-        // Stage 3 Items
-        if (stage >= 3) {
-            possibleLoot.add(new ItemStack(Items.TORCH, generateItems(2, 6)));
-            possibleLoot.add(new ItemStack(Items.SPRUCE_SAPLING, generateItems(1, 4)));
-            possibleLoot.add(new ItemStack(Items.IRON_INGOT, generateItems(2, 6)));
-            possibleLoot.add(new ItemStack(Items.STRING, generateItems(2, 4)));
-            possibleLoot.add(new ItemStack(Items.ARROW, generateItems(4, 12)));
-            possibleLoot.add(new ItemStack(Items.GUNPOWDER, generateItems(2, 5)));
-            possibleLoot.add(new ItemStack(Items.PAPER, generateItems(2, 6)));
-            possibleLoot.add(new ItemStack(Items.BOOK, generateItems(2, 6)));
-            possibleLoot.add(new ItemStack(Items.BOOKSHELF, generateItems(2, 6)));
+        int roll = random.nextInt(totalWeight);
+        for (LootEntry entry : STAGE_LOOT) {
+            if (clampedStage < entry.minStage() || clampedStage > entry.maxStage()) {
+                continue;
+            }
+            roll -= entry.weight();
+            if (roll < 0) {
+                return new ItemStack(entry.item(), generateItems(entry.min(), entry.max()));
+            }
         }
 
-        // Stage 4 Items
-        if (stage >= 4) {
-//            possibleLoot.add(new ItemStack(Items.PRISMARINE_SHARD, 4));
-            possibleLoot.add(new ItemStack(Items.COOKED_COD, generateItems(2, 4)));
-            possibleLoot.add(new ItemStack(Items.DIAMOND, generateItems(2, 6)));
-        }
-
-        // Stage 5 Items
-        if (stage >= 5) {
-            possibleLoot.add(new ItemStack(Items.GOLD_INGOT, generateItems(2, 6)));
-            possibleLoot.add(new ItemStack(Items.LAPIS_LAZULI, generateItems(4, 8)));
-        }
-
-        // Stage 6 Items
-        if (stage >= 6) {
-            possibleLoot.add(new ItemStack(Items.NETHER_WART, generateItems(2, 6)));
-            possibleLoot.add(new ItemStack(Items.BLAZE_ROD, generateItems(2, 4)));
-            possibleLoot.add(new ItemStack(Items.ENDER_PEARL, generateItems(2, 4)));
-            possibleLoot.add(new ItemStack(Items.GLOWSTONE_DUST, generateItems(4, 6)));
-            possibleLoot.add(new ItemStack(Items.NETHERITE_SCRAP, generateItems(4, 8)));
-        }
-
-        // Stage 7 Items
-        if (stage >= 7) {
-            possibleLoot.add(new ItemStack(Items.ENDER_EYE, generateItems(2, 6)));
-            // possibleLoot.add(new ItemStack(Items.SHULKER_SHELL, 2));
-            // possibleLoot.add(new ItemStack(Items.ELYTRA));
-            possibleLoot.add(new ItemStack(Items.END_PORTAL_FRAME, generateItems(2, 6)));
-            possibleLoot.add(new ItemStack(Items.OBSIDIAN, generateItems(2, 6)));
-            possibleLoot.add(new ItemStack(Items.GUNPOWDER, generateItems(2, 6)));
-            possibleLoot.add(new ItemStack(Items.NETHERITE_UPGRADE_SMITHING_TEMPLATE, generateItems(2, 4)));
-        }
-
-        // Pick a random item out of the entire accumulated pool
-        int randomIndex = random.nextInt(possibleLoot.size());
-
-        // Return a copy to ensure safe item handling
-        return possibleLoot.get(randomIndex).copy();
+        return new ItemStack(Items.BREAD, 2);
     }
 }

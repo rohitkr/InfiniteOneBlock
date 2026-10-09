@@ -58,8 +58,8 @@ public class MonsterTntEntity extends PrimedTnt {
             serverWorld.playSound(null, spawnPos, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.BLOCKS, 1.0F, 1.0F);
             serverWorld.sendParticles(ParticleTypes.EXPLOSION_EMITTER, spawnPos.getX() + 0.5, spawnPos.getY() + 0.5, spawnPos.getZ() + 0.5, 1, 0.0D, 0.0D, 0.0D, 0.0D);
 
-            // ✅ FIXED: Updated to pass both stage and island to respect once-per-stage boss checking parameters
-            EntityType<?> selectedMobType = manager.getMobTypeForStage(this.stage, this.island, true);
+            // Plain stage mob only: super mobs must not be consumed (and then swapped out) by the TNT
+            EntityType<?> selectedMobType = manager.getHostileMobForStage(this.stage);
 
             if (selectedMobType != null) {
                 java.util.Random rand = new java.util.Random();

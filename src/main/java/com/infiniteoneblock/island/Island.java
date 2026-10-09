@@ -26,6 +26,7 @@ public class Island {
     private boolean spawnedWitherSkeleton = false;
     private boolean spawnedWarden = false;
     private int grantedEssentialsMask = 0;
+    private int endPortalFramesGranted = 0;
 
     public boolean hasSpawnedGuardian() { return this.spawnedGuardian; }
     public void setSpawnedGuardian(boolean val) { this.spawnedGuardian = val; }
@@ -42,6 +43,14 @@ public class Island {
 
     public void grantEssential(int bitMask) {
         grantedEssentialsMask |= bitMask;
+    }
+
+    public int getEndPortalFramesGranted() {
+        return endPortalFramesGranted;
+    }
+
+    public void setEndPortalFramesGranted(int endPortalFramesGranted) {
+        this.endPortalFramesGranted = Math.max(0, endPortalFramesGranted);
     }
 
     public int getGrantedEssentialsMask() {
